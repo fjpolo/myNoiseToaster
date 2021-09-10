@@ -17,7 +17,7 @@ MainComponent::MainComponent()
     addAndMakeVisible(VCO_frequency_dial);
     VCO_frequency_dial.setSliderStyle(juce::Slider::SliderStyle::Rotary);
     VCO_frequency_dial.setTextBoxStyle(juce::Slider::NoTextBox, true, 100, 25);
-    VCO_frequency_dial.setRange(55, 880);
+    VCO_frequency_dial.setRange(0.01, 1500);
     VCO_frequency_dial.addListener(this);
     VCO_frequency_dial.setValue(220);
     /*VCO_LFO_ModDepth_dial*/
