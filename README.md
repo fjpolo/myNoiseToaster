@@ -24,6 +24,7 @@ Digital version of Noise Toaster based on the book "Make: Analog Synthesizers. A
 	✖ AR On-Off
 	
 - LFO
+	
 	✔ Rate
 	
 	✔ Integrated square wave
@@ -35,16 +36,23 @@ Digital version of Noise Toaster based on the book "Make: Analog Synthesizers. A
 - VCLPF
 
 	✖ Input selector
+	
 	✖ White Noise
+	
 	✖ Cutoff Frequency
+	
 	✖ Resonance
+	
 	✖ Mod Depth
 	
 - AREG
 	
 	✖ Attack
+	
 	✖ Release 
+	
 	✖ Manual gate
+	
 	✖ Manual-Repeat
 	
 - VCA
