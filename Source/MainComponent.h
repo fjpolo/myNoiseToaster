@@ -160,12 +160,12 @@ private:
     juce::Label cpuUsageText;
     const unsigned int VCO_tableSize = 1 << 7;      // [2]
     float level = 0.0f;
-    juce::AudioSampleBuffer sineTable;          // [1]
+    juce::AudioSampleBuffer sawtoothTable;          // [1]
     juce::OwnedArray<WavetableOscillator> oscillators;
     double VCO_frequency;
     WavetableOscillator* VCO_osc;
-    void createWavetable();
-    void setFrequencies();
+    void VCO_createWavetable();
+    void VCO_setFrequencies();
 
     /*VCLPF*/
     juce::Slider VCLPF_cutoffFrequency_dial;

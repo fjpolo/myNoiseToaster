@@ -224,7 +224,7 @@ MainComponent::MainComponent()
     cpuUsageText.setJustificationType(juce::Justification::right);
     addAndMakeVisible(cpuUsageLabel);
     addAndMakeVisible(cpuUsageText);
-    createWavetable();
+    VCO_createWavetable();
     LFO_createWavetable();
     setAudioChannels(0, 2); // no inputs, two outputs
     //startTimer(50);
@@ -256,7 +256,7 @@ void MainComponent::prepareToPlay (int samplesPerBlockExpected, double sampleRat
     
     samplerate = sampleRate;
     /**/
-    auto* oscillator1 = new WavetableOscillator(sineTable);
+    auto* oscillator1 = new WavetableOscillator(sawtoothTable);
     auto* oscillator2 = new WavetableOscillator(LFO_waveTable);
     oscillator1->setFrequency((float)220, (float)sampleRate);
     oscillator2->setFrequency((float)55, (float)sampleRate);
@@ -573,7 +573,7 @@ void MainComponent::sliderValueChanged(juce::Slider* slider)
     {
         /*Change VCO frequency*/
         VCO_frequency = VCO_frequency_dial.getValue();
-        setFrequencies();
+        VCO_setFrequencies();
     }
 
     /*Output_volume_dial*/
@@ -596,17 +596,18 @@ void MainComponent::sliderValueChanged(juce::Slider* slider)
         LFO_level = VCO_LFO_ModDepth_dial.getValue();
     }
 }
-void MainComponent::createWavetable()
+void MainComponent::VCO_createWavetable()
 {
-    sineTable.setSize(1, (int)VCO_tableSize);
-    auto* samples = sineTable.getWritePointer(0);
+    sawtoothTable.setSize(1, (int)VCO_tableSize);
+    auto* samples = sawtoothTable.getWritePointer(0);
 
     auto angleDelta = juce::MathConstants<double>::twoPi / (double)(VCO_tableSize - 1);
     auto currentAngle = 0.0;
 
     for (unsigned int i = 0; i < VCO_tableSize; ++i)
     {
-        auto sample = std::sin(currentAngle);
+        //auto sample = std::sin(currentAngle);
+        auto sample = (float)(i / (float)VCO_tableSize);
         samples[i] = (float)sample;
         currentAngle += angleDelta;
     }
@@ -683,7 +684,7 @@ void MainComponent::LFO_createWavetable()
         }
     }
 }
-void MainComponent::setFrequencies() 
+void MainComponent::VCO_setFrequencies()
 {
     oscillators[0]->setFrequency(VCO_frequency, samplerate);
 }
