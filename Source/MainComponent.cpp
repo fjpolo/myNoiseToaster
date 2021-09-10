@@ -81,6 +81,8 @@ MainComponent::MainComponent()
     VCLPF_inputSelect_dial.setTextBoxStyle(juce::Slider::NoTextBox, true, 100, 25);
     VCLPF_inputSelect_dial.setRange(0, 2, 1);
     VCLPF_inputSelect_dial.setRotaryParameters(0, 3.14, true);
+    VCLPF_inputSelect_dial.addListener(this);
+    VCLPF_inputSelect_dial.setValue(0);
     /*VCLPF_whiteNoise_toggleButton*/
     addAndMakeVisible(VCLPF_whiteNoise_toggleButton);
     VCLPF_whiteNoise_toggleButton.setColour(juce::TextButton::buttonColourId, juce::Colours::black);
@@ -595,6 +597,13 @@ void MainComponent::sliderValueChanged(juce::Slider* slider)
     {
         LFO_level = VCO_LFO_ModDepth_dial.getValue();
     }
+
+    /*VCLPF_inputSelect_state*/
+    if (slider == &VCLPF_inputSelect_dial)
+    {
+        VCLPF_inputSelect_state = VCLPF_inputSelect_dial.getValue();
+        VCO_createWavetable();
+    }
 }
 void MainComponent::VCO_createWavetable()
 {
@@ -604,12 +613,44 @@ void MainComponent::VCO_createWavetable()
     auto angleDelta = juce::MathConstants<double>::twoPi / (double)(VCO_tableSize - 1);
     auto currentAngle = 0.0;
 
-    for (unsigned int i = 0; i < VCO_tableSize; ++i)
+
+    switch (VCLPF_inputSelect_state)
     {
-        //auto sample = std::sin(currentAngle);
-        auto sample = (float)(i / (float)VCO_tableSize);
-        samples[i] = (float)sample;
-        currentAngle += angleDelta;
+        case 0:
+        {
+            /*Sawtooth*/
+            for (unsigned int i = 0; i < VCO_tableSize; ++i)
+            {
+                //auto sample = std::sin(currentAngle);
+                auto sample = (float)(i / (float)VCO_tableSize);
+                samples[i] = (float)sample;
+                currentAngle += angleDelta;
+            }
+            break;
+        }
+        case 2:
+        {
+            /*Square*/
+            for (unsigned int i = 0; i < VCO_tableSize; ++i)
+            {
+                if (currentAngle <= juce::MathConstants<float>::pi) samples[i] = 1.0f;
+                else samples[i] = -1.0f;
+                currentAngle += angleDelta;
+            }
+            break;
+        }
+        case 1:
+        default:
+        {
+            /*NULL*/
+            for (unsigned int i = 0; i < VCO_tableSize; ++i)
+            {
+                auto sample = 0.0f;
+                samples[i] = (float)sample;
+                currentAngle += angleDelta;
+            }
+            break;
+        }
     }
 
 }

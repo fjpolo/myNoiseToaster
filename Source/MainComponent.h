@@ -147,6 +147,10 @@ private:
     juce::dsp::Gain<float> Output_volume;
     double Output_level;
 
+    /*INput*/
+    juce::Slider VCLPF_inputSelect_dial;
+    int VCLPF_inputSelect_state;
+
     /*VCO*/
     juce::Slider VCO_frequency_dial;
     juce::Slider VCO_LFO_ModDepth_dial;
@@ -171,7 +175,6 @@ private:
     juce::Slider VCLPF_cutoffFrequency_dial;
     juce::Slider VCLPF_resonance_dial;
     juce::Slider VCLPF_ModDepth_dial;
-    juce::Slider VCLPF_inputSelect_dial;
     juce::TextButton VCLPF_whiteNoise_toggleButton{};
     bool VCLPF_whiteNoiseState{ false };
     juce::TextButton VCLPF_LFO_toggleButton{};

@@ -12,6 +12,14 @@ Digital version of Noise Toaster based on the book "Make: Analog Synthesizers. A
 	
 	✔ Volume
 	
+- Input
+
+	✔ Sawtooth
+	
+	✔ Off
+	
+	✔ Square
+	
 - VCO
 	✔ Sine Oscilator
 	
@@ -34,8 +42,6 @@ Digital version of Noise Toaster based on the book "Make: Analog Synthesizers. A
 	✔ Derivated square wave
 
 - VCLPF
-
-	✖ Input selector
 	
 	✖ White Noise
 	
