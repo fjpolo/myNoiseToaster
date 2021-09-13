@@ -788,22 +788,41 @@ void MainComponent::LFO_createWavetable()
             currentAngle += angleDelta;
         }
     }
-    /*Spikes*/
-    if (LFO_derivate_state && !LFO_integrate_state)
-    {
-        for (unsigned int i = 0; i < LFO_tableSize / 2 - 1; ++i)
+    ///*Spikes*/
+    //if (LFO_derivate_state && !LFO_integrate_state)
+    //{
+    //    for (unsigned int i = 0; i < LFO_tableSize / 2 - 1; ++i)
+    //    {
+    //        auto sample = std::exp(((-currentAngle) / RC));
+    //        samples[i] = (float)sample;
+    //        currentAngle += angleDelta;
+    //    }
+    //    for (unsigned int i = LFO_tableSize / 2; i < LFO_tableSize / 2; ++i)
+    //    {
+    //        auto sample = -std::exp(((-currentAngle) / RC));
+    //        samples[i] = (float)sample;
+    //        currentAngle += angleDelta;
+    //    }
+    //}
+    /*Discharge*/
+    if (LFO_derivate_state && !LFO_integrate_state) 
+    {   
+        currentAngle = 0.0;
+        for (unsigned int i = 0; i < (LFO_tableSize / 2 - 1); ++i)
         {
             auto sample = std::exp(((-currentAngle) / RC));
             samples[i] = (float)sample;
             currentAngle += angleDelta;
         }
-        for (unsigned int i = LFO_tableSize / 2; i < LFO_tableSize / 2; ++i)
+        currentAngle = 0.0;
+        for (unsigned int i = LFO_tableSize / 2; i < LFO_tableSize; ++i)
         {
             auto sample = -std::exp(((-currentAngle) / RC));
             samples[i] = (float)sample;
             currentAngle += angleDelta;
         }
     }
+
 }
 void MainComponent::VCO_setFrequencies()
 {
