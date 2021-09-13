@@ -32,6 +32,8 @@ MainComponent::MainComponent()
     VCO_AR_ModDepth_dial.setSliderStyle(juce::Slider::SliderStyle::Rotary);
     VCO_AR_ModDepth_dial.setTextBoxStyle(juce::Slider::NoTextBox, true, 100, 25);
     VCO_AR_ModDepth_dial.setRange(0, 1);
+    VCO_AR_ModDepth_dial.addListener(this);
+    VCO_AR_ModDepth_dial.setValue(0.0f);
     /*VCO_sync_toggleButton*/
     addAndMakeVisible(VCO_sync_toggleButton);
     VCO_sync_toggleButton.setColour(juce::TextButton::buttonColourId, juce::Colours::black);
@@ -109,14 +111,21 @@ MainComponent::MainComponent()
     VCLPF_LFO_toggleButton.addListener(this);
 
     /*** AREG ***/
+
+    /*AREG_attack_dial*/
     addAndMakeVisible(AREG_attack_dial);
     AREG_attack_dial.setSliderStyle(juce::Slider::SliderStyle::Rotary);
     AREG_attack_dial.setTextBoxStyle(juce::Slider::NoTextBox, true, 100, 25);
-    AREG_attack_dial.setRange(0, 10);
+    AREG_attack_dial.setRange(0, 1);
+    AREG_attack_dial.addListener(this);
+    AREG_attack_dial.setValue(0);
+    /**/
     addAndMakeVisible(AREG_release_dial);
     AREG_release_dial.setSliderStyle(juce::Slider::SliderStyle::Rotary);
     AREG_release_dial.setTextBoxStyle(juce::Slider::NoTextBox, true, 100, 25);
-    AREG_release_dial.setRange(0, 10);
+    AREG_release_dial.setRange(0, 1);
+    AREG_release_dial.addListener(this);
+    AREG_release_dial.setValue(0);
     /*AREG_manualGate_toggleButton*/
     addAndMakeVisible(AREG_manualGate_toggleButton);
     AREG_manualGate_toggleButton.setColour(juce::TextButton::buttonColourId, juce::Colours::black);
@@ -226,13 +235,21 @@ MainComponent::MainComponent()
     cpuUsageText.setJustificationType(juce::Justification::right);
     addAndMakeVisible(cpuUsageLabel);
     addAndMakeVisible(cpuUsageText);
-    VCO_createWavetable();
-    LFO_createWavetable();
-    setAudioChannels(0, 2); // no inputs, two outputs
+
     //startTimer(50);
     VCO_frequency = 220;
     LFO_frequency = 10;
+    AREG_frequency = 50;
     LFO_level = 0;
+    AREG_level = 0;
+    VCLPF_inputSelect_state = 0;
+    AREG_manualCurrentAngle = 0.0f;
+    AREG_attackValue = 0.0f;
+    AREG_releaseValue = 0.0f; 
+    AREG_angleDelta = juce::MathConstants<double>::twoPi / (double)(AREG_tableSize - 1); 
+    VCO_createWavetable();
+    LFO_createWavetable();
+    setAudioChannels(0, 2); // no inputs, two outputs
 }
 
 MainComponent::~MainComponent()
@@ -293,36 +310,75 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& buffer
     {
         auto levelSample = oscillators[0]->getNextSample();
         auto LFO_levelSample = LFO_oscillators[0]->getNextSample() * LFO_level;
-        //leftBuffer[sample] += levelSample;
-        //rightBuffer[sample] += levelSample;
-
-        //leftBuffer[sample] += LFO_levelSample;
-        //rightBuffer[sample] += LFO_levelSample;
 
         /*VCO_syncState*/
         if (VCO_syncState) {
             if (LFO_level != 0.0f) {
-                leftBuffer[sample] += (levelSample + LFO_levelSample) * Output_level;
-                rightBuffer[sample] += (levelSample + LFO_levelSample) * Output_level;
+                leftBuffer[sample] += (levelSample + LFO_levelSample);
+                rightBuffer[sample] += (levelSample + LFO_levelSample);
             }
             else
             {
-                leftBuffer[sample] += levelSample * Output_level;
-                rightBuffer[sample] += levelSample * Output_level;
+                leftBuffer[sample] += levelSample;
+                rightBuffer[sample] += levelSample;
             }
         } // END if VCO_syncState
         /*!VCO_syncState*/
         else {
             if (LFO_level != 0.0f) {
-                leftBuffer[sample] += levelSample * LFO_levelSample * Output_level;
-                rightBuffer[sample] += levelSample * LFO_levelSample * Output_level;
+                leftBuffer[sample] += levelSample * LFO_levelSample;
+                rightBuffer[sample] += levelSample * LFO_levelSample;
             }
             else
             {
-                leftBuffer[sample] += levelSample * Output_level;
-                rightBuffer[sample] += levelSample * Output_level;
+                leftBuffer[sample] += levelSample;
+                rightBuffer[sample] += levelSample;
             }
         } // END if !VCO_syncState
+
+        /*VCO_ARmodState*/
+        if (VCO_ARmodState)
+        {
+            const auto RC = 1000 * 0.0000033f;
+            AREG_manualGate_lastState = AREG_manualGate_state;
+        //    /*Modulate using AR*/
+
+            /*Manual - !AREG_repeat_state*/
+            if(!AREG_repeat_state)
+            {
+                /*Manual*/
+                if (AREG_manualGate_state != AREG_manualGate_lastState) AREG_manualCurrentAngle = 0.0f;
+                if (AREG_manualGate_state) {
+                    //AREG_manualCurrentValue = 1 - std::exp(((-AREG_manualCurrentAngle) / RC * ((AREG_attackValue + AREG_releaseValue) / 2.0f)));
+                    AREG_manualCurrentValue = std::exp(((-AREG_manualCurrentAngle) / AREG_attackValue * AREG_releaseValue));
+                    AREG_manualCurrentValue = 1.001 - AREG_manualCurrentValue;
+                    if ( (AREG_manualCurrentValue >= 1) )
+                    {
+                        AREG_manualGate_state = false;
+                    }
+                    auto AREG_levelSample = AREG_level * AREG_manualCurrentValue;
+                    AREG_manualCurrentAngle += AREG_angleDelta;
+                }
+                else {
+                    //AREG_manualCurrentValue = std::exp(((-AREG_manualCurrentAngle) / RC * ((AREG_attackValue + AREG_releaseValue) / 2.0f)));
+                    AREG_manualCurrentValue = std::exp(((-AREG_manualCurrentAngle) / AREG_attackValue * AREG_releaseValue));
+                    auto AREG_levelSample = AREG_level * AREG_manualCurrentValue;
+                    AREG_manualCurrentAngle += AREG_angleDelta;
+                }
+
+                /**/
+                leftBuffer[sample] *= AREG_manualCurrentValue;
+                rightBuffer[sample] *= AREG_manualCurrentValue;
+                
+            } // END if !AREG_repeat_state
+            /*Repeat - AREG_repeat_state*/
+            else {} // END else AREG_repeat_state
+
+        } // END if VCO_syncState
+        
+        /*Level*/
+        leftBuffer[sample] *= Output_level;
+        rightBuffer[sample] *= Output_level;
     }
 }
 
@@ -554,6 +610,7 @@ void MainComponent::buttonClicked(juce::Button* button)
         if (!AREG_repeat_state) {
             AREG_repeat_state = true;
             AREG_repeat_toggleButton.setButtonText("R");
+            AREG_setFrequencies();
         }
         else {
             AREG_repeat_state = false;
@@ -564,7 +621,7 @@ void MainComponent::buttonClicked(juce::Button* button)
     /*AREG_manualGate_toggleButton*/
     if (button == &AREG_manualGate_toggleButton)
     {
-
+        AREG_manualGate_state = true;
     }
 }
 
@@ -598,11 +655,31 @@ void MainComponent::sliderValueChanged(juce::Slider* slider)
         LFO_level = VCO_LFO_ModDepth_dial.getValue();
     }
 
-    /*VCLPF_inputSelect_state*/
+    /*VCO_AR_ModDepth_dial*/
+    if (slider == &VCO_AR_ModDepth_dial)
+    {
+        AREG_level = VCO_AR_ModDepth_dial.getValue();
+    }
+
+    /*VCLPF_inputSelect_dial*/
     if (slider == &VCLPF_inputSelect_dial)
     {
         VCLPF_inputSelect_state = VCLPF_inputSelect_dial.getValue();
         VCO_createWavetable();
+    }
+
+    /*AREG_attack_dial*/
+    if (slider == &AREG_attack_dial)
+    {
+        AREG_attackValue = AREG_attack_dial.getValue();
+        if(AREG_repeat_state) AREG_setFrequencies();
+    }
+
+    /*AREG_release_dial*/
+    if (slider == &AREG_release_dial)
+    {
+        AREG_releaseValue = AREG_release_dial.getValue();
+        if (AREG_repeat_state) AREG_setFrequencies();
     }
 }
 void MainComponent::VCO_createWavetable()
@@ -687,6 +764,7 @@ void MainComponent::LFO_createWavetable()
             currentAngle += angleDelta;
         }
         /*Discharge*/
+        currentAngle = 0.0; 
         for (unsigned int i = (1 * (LFO_tableSize/4)); i < (2*(LFO_tableSize/4)-1); ++i)
         {
             auto sample = std::exp(((-currentAngle) / RC));
@@ -694,6 +772,7 @@ void MainComponent::LFO_createWavetable()
             currentAngle += angleDelta;
         }
         /*Charge*/
+        currentAngle = 0.0; 
         for (unsigned int i = (2 * (LFO_tableSize / 4)); i < (3 * (LFO_tableSize / 4) - 1); ++i)
         {
             auto sample = -1 + std::exp(((-currentAngle) / RC));
@@ -701,6 +780,7 @@ void MainComponent::LFO_createWavetable()
             currentAngle += angleDelta;
         }
         /*Discharge*/
+        currentAngle = 0.0; 
         for (unsigned int i = (3 * (LFO_tableSize / 4)) / 2; i < (4 * (LFO_tableSize / 4) - 1) / 2; ++i)
         {
             auto sample = -std::exp(((-currentAngle) / RC));
@@ -732,4 +812,30 @@ void MainComponent::VCO_setFrequencies()
 void MainComponent::LFO_setFrequencies()
 {
     LFO_oscillators[0]->setFrequency(LFO_frequency, samplerate);
+}
+void MainComponent::AREG_createWavetable()
+{
+    AREG_waveTable.setSize(1, (int)AREG_tableSize);
+    auto* samples = AREG_waveTable.getWritePointer(0);
+    const auto RC = 1000 * 0.0000033f;
+
+    auto angleDelta = juce::MathConstants<double>::twoPi / (double)(AREG_tableSize - 1);
+    auto currentAngle = 0.0;
+    /*Charge*/
+    for (unsigned int i = 0; i < (int)(AREG_tableSize * AREG_attackValue/2)-1; ++i)
+    {
+        auto sample = 1 - std::exp(((-currentAngle) / RC));
+        samples[i] = (float)sample;
+        currentAngle += angleDelta;
+    }
+    /*Discharge*/
+    for (unsigned int i = (int)(AREG_tableSize * AREG_attackValue / 2); i < (2 * (LFO_tableSize / 4) - 1); ++i)
+    {
+        auto sample = std::exp(((-currentAngle) / RC));
+        samples[i] = (float)sample;
+        currentAngle += angleDelta;
+    }
+}
+void MainComponent::AREG_setFrequencies(){
+    AREG_oscillators[0]->setFrequency( AREG_frequency, samplerate);
 }

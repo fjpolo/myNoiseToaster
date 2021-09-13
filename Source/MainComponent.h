@@ -183,10 +183,24 @@ private:
 
     /*AREG*/
     juce::Slider AREG_attack_dial;
+    double AREG_attackValue;
     juce::Slider AREG_release_dial;
+    double AREG_releaseValue;
     juce::TextButton  AREG_repeat_toggleButton{};
     bool AREG_repeat_state{ false };
     juce::TextButton  AREG_manualGate_toggleButton{};
+    bool AREG_manualGate_state{ false };
+    bool AREG_manualGate_lastState{ false };
+    const unsigned int AREG_tableSize = 1 << 7;
+    juce::AudioSampleBuffer AREG_waveTable;
+    juce::OwnedArray<WavetableOscillator> AREG_oscillators;
+    double AREG_frequency;
+    void AREG_createWavetable();
+    void AREG_setFrequencies();
+    double AREG_manualCurrentAngle;
+    double AREG_manualCurrentValue;
+    double AREG_level;
+    double AREG_angleDelta;
 
     /*LFO*/
     juce::Slider LFO_rate_dial;
