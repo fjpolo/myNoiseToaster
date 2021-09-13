@@ -116,14 +116,14 @@ MainComponent::MainComponent()
     addAndMakeVisible(AREG_attack_dial);
     AREG_attack_dial.setSliderStyle(juce::Slider::SliderStyle::Rotary);
     AREG_attack_dial.setTextBoxStyle(juce::Slider::NoTextBox, true, 100, 25);
-    AREG_attack_dial.setRange(0, 1);
+    AREG_attack_dial.setRange(0, 0.5);
     AREG_attack_dial.addListener(this);
     AREG_attack_dial.setValue(0);
     /**/
     addAndMakeVisible(AREG_release_dial);
     AREG_release_dial.setSliderStyle(juce::Slider::SliderStyle::Rotary);
     AREG_release_dial.setTextBoxStyle(juce::Slider::NoTextBox, true, 100, 25);
-    AREG_release_dial.setRange(0, 1);
+    AREG_release_dial.setRange(0, 0.5);
     AREG_release_dial.addListener(this);
     AREG_release_dial.setValue(0);
     /*AREG_manualGate_toggleButton*/
@@ -239,7 +239,7 @@ MainComponent::MainComponent()
     //startTimer(50);
     VCO_frequency = 220;
     LFO_frequency = 10;
-    AREG_frequency = 50;
+    AREG_frequency = 55;
     LFO_level = 0;
     AREG_level = 0;
     VCLPF_inputSelect_state = 0;
@@ -249,6 +249,7 @@ MainComponent::MainComponent()
     AREG_angleDelta = juce::MathConstants<double>::twoPi / (double)(AREG_tableSize - 1); 
     VCO_createWavetable();
     LFO_createWavetable();
+    AREG_createWavetable();
     setAudioChannels(0, 2); // no inputs, two outputs
 }
 
@@ -277,12 +278,16 @@ void MainComponent::prepareToPlay (int samplesPerBlockExpected, double sampleRat
     /**/
     auto* oscillator1 = new WavetableOscillator(sawtoothTable);
     auto* oscillator2 = new WavetableOscillator(LFO_waveTable);
+    auto* oscillator3 = new WavetableOscillator(AREG_waveTable);
     oscillator1->setFrequency((float)220, (float)sampleRate);
     oscillator2->setFrequency((float)55, (float)sampleRate);
+    oscillator3->setFrequency((float)55, (float)sampleRate);
     /*VCO*/
     oscillators.add(oscillator1);
     /*LFO*/
     LFO_oscillators.add(oscillator2);
+    /*AREG*/
+    AREG_oscillators.add(oscillator3);
 }
 
 void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill)
@@ -310,6 +315,7 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& buffer
     {
         auto levelSample = oscillators[0]->getNextSample();
         auto LFO_levelSample = LFO_oscillators[0]->getNextSample() * LFO_level;
+        auto AREG_levelSample = AREG_oscillators[0]->getNextSample() * AREG_level;
 
         /*VCO_syncState*/
         if (VCO_syncState) {
@@ -340,6 +346,8 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& buffer
         if (VCO_ARmodState)
         {
             const auto RC = 1000 * 0.0000033f;
+            if (AREG_manualGate_state != AREG_manualGate_lastState)
+                AREG_manualCurrentAngle = 0.0f; 
             AREG_manualGate_lastState = AREG_manualGate_state;
         //    /*Modulate using AR*/
 
@@ -347,10 +355,11 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& buffer
             if(!AREG_repeat_state)
             {
                 /*Manual*/
-                if (AREG_manualGate_state != AREG_manualGate_lastState) AREG_manualCurrentAngle = 0.0f;
+                
                 if (AREG_manualGate_state) {
                     //AREG_manualCurrentValue = 1 - std::exp(((-AREG_manualCurrentAngle) / RC * ((AREG_attackValue + AREG_releaseValue) / 2.0f)));
-                    AREG_manualCurrentValue = std::exp(((-AREG_manualCurrentAngle) / AREG_attackValue * AREG_releaseValue));
+                    AREG_manualCurrentValue = std::exp(((-AREG_manualCurrentAngle) /  20*(AREG_attackValue * AREG_releaseValue)));
+                    //AREG_manualCurrentValue = std::exp(((-AREG_manualCurrentAngle) / RC ));
                     AREG_manualCurrentValue = 1.001 - AREG_manualCurrentValue;
                     if ( (AREG_manualCurrentValue >= 1) )
                     {
@@ -361,7 +370,7 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& buffer
                 }
                 else {
                     //AREG_manualCurrentValue = std::exp(((-AREG_manualCurrentAngle) / RC * ((AREG_attackValue + AREG_releaseValue) / 2.0f)));
-                    AREG_manualCurrentValue = std::exp(((-AREG_manualCurrentAngle) / AREG_attackValue * AREG_releaseValue));
+                    AREG_manualCurrentValue = std::exp(((-AREG_manualCurrentAngle) / 20*(AREG_attackValue * AREG_releaseValue)));
                     auto AREG_levelSample = AREG_level * AREG_manualCurrentValue;
                     AREG_manualCurrentAngle += AREG_angleDelta;
                 }
@@ -372,7 +381,11 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& buffer
                 
             } // END if !AREG_repeat_state
             /*Repeat - AREG_repeat_state*/
-            else {} // END else AREG_repeat_state
+            else 
+            {
+                leftBuffer[sample] += levelSample * AREG_levelSample;
+                rightBuffer[sample] += levelSample * AREG_levelSample;
+            } // END else AREG_repeat_state
 
         } // END if VCO_syncState
         
@@ -840,15 +853,41 @@ void MainComponent::AREG_createWavetable()
 
     auto angleDelta = juce::MathConstants<double>::twoPi / (double)(AREG_tableSize - 1);
     auto currentAngle = 0.0;
-    /*Charge*/
-    for (unsigned int i = 0; i < (int)(AREG_tableSize * AREG_attackValue/2)-1; ++i)
+    auto AttackSize = (int)(AREG_attackValue * AREG_tableSize);
+    auto ReleaseSize = (int)(AREG_releaseValue * AREG_tableSize);
+    if (AttackSize <= 0) AttackSize = 2;
+    if (ReleaseSize <= 0) ReleaseSize = 2;
+    ///*Charge*/
+    //for (unsigned int i = 0; i < AttackSize-1; ++i)
+    //{
+    //    auto sample = 1 - std::exp(((-currentAngle) / RC));
+    //    samples[i] = (float)sample;
+    //    currentAngle += angleDelta;
+    //}
+    ///*Discharge*/
+    //currentAngle = 0; 
+    //for (unsigned int i = AttackSize; i < (AttackSize+ ReleaseSize)-1; ++i)
+    //{
+    //    auto sample = std::exp(((-currentAngle) / RC));
+    //    samples[i] = (float)sample;
+    //    currentAngle += angleDelta;
+    //}
+    ///*Zero*/
+    //for (unsigned int i = (AttackSize + ReleaseSize); i < AREG_tableSize; ++i) 
+    //{
+    //    samples[i] = (float)0.0f;
+    //    currentAngle += angleDelta;
+    //}
+        /*Charge*/
+    for (unsigned int i = 0; i < AREG_tableSize / 2 - 1; ++i)
     {
         auto sample = 1 - std::exp(((-currentAngle) / RC));
         samples[i] = (float)sample;
         currentAngle += angleDelta;
     }
     /*Discharge*/
-    for (unsigned int i = (int)(AREG_tableSize * AREG_attackValue / 2); i < (2 * (LFO_tableSize / 4) - 1); ++i)
+    currentAngle = 0;
+    for (unsigned int i = AREG_tableSize / 2; i < AREG_tableSize; ++i)
     {
         auto sample = std::exp(((-currentAngle) / RC));
         samples[i] = (float)sample;
@@ -856,5 +895,7 @@ void MainComponent::AREG_createWavetable()
     }
 }
 void MainComponent::AREG_setFrequencies(){
+    AREG_frequency = 55 * (AREG_attackValue + AREG_releaseValue);
+    //AREG_frequency = 880;
     AREG_oscillators[0]->setFrequency( AREG_frequency, samplerate);
 }
