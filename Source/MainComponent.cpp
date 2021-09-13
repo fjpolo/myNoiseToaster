@@ -324,8 +324,8 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& buffer
             /*VCO_syncState*/
             if (VCO_syncState) {
                 if (LFO_level != 0.0f) {
-                    leftBuffer[sample] += (levelSample + LFO_levelSample);
-                    rightBuffer[sample] += (levelSample + LFO_levelSample);
+                    leftBuffer[sample] += (levelSample + LFO_levelSample) / 2;
+                    rightBuffer[sample] += (levelSample + LFO_levelSample) / 2;
                 }
                 else
                 {
@@ -404,6 +404,10 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& buffer
 
         /*Scope*/
         oscilloscope.pushBuffer(bufferToFill);
+    }
+    else
+    {
+        oscilloscope.clear();
     }
 }
 void MainComponent::releaseResources()
@@ -515,9 +519,9 @@ void MainComponent::resized()
     PWR_toggleButton.setBounds(PWR_ToggleButtonX - PWR_toggleButtonRadius, PWR_ToggleButtonY - PWR_toggleButtonRadius, PWR_toggleButtonDiameter, PWR_toggleButtonDiameter);
 
     /*Scope*/
-    const int scopeWidth{ 140 };
+    const int scopeWidth{ 144 };
     const int scopeHeight{ 140 };
-    const int scopeX{ 656 };
+    const int scopeX{ 658 };
     const int scopeY{ 121 };
     oscilloscope.setBounds(scopeX - scopeWidth / 2, scopeY - scopeHeight / 2, scopeWidth, scopeHeight);
 
@@ -763,8 +767,9 @@ void MainComponent::LFO_createWavetable()
 {
     LFO_waveTable.setSize(1, (int)LFO_tableSize);
     auto* samples = LFO_waveTable.getWritePointer(0);
-    const auto RC = 20.0f;
-    const auto RC2 = 1000 * 0.0000033f;
+    //const auto RC = 20.0f;
+    const auto RC = 1000 * 0.0033f;
+    const auto RC2 = 1000 * 0.00033f;
     auto angleDelta = juce::MathConstants<double>::twoPi / (double)(LFO_tableSize - 1);
     auto currentAngle = 0.0;
 
@@ -777,60 +782,61 @@ void MainComponent::LFO_createWavetable()
             //auto sample = std::sin(currentAngle);
             //samples[i] = (float)sample;
             if (currentAngle <= juce::MathConstants<float>::pi) samples[i] = 1.0f;
-            else samples[i] = -1.0f;
+            //else samples[i] = -1.0f;
+            else samples[i] = 0.0f;
             currentAngle += angleDelta;
         }
     }
     /*RC charge-discharge*/
     if (LFO_integrate_state && !LFO_derivate_state) 
     {
-        /*Charge*/
-        for (unsigned int i = 0; i < (1 * (LFO_tableSize / 4) - 1); ++i)
-        {
-            auto sample = 1 - std::exp(((-currentAngle) / RC));
-            samples[i] = (float)sample;
-            currentAngle += angleDelta;
-        }
-        /*Discharge*/
-        currentAngle = 0.0; 
-        for (unsigned int i = (1 * (LFO_tableSize/4)); i < (2*(LFO_tableSize/4)-1); ++i)
-        {
-            auto sample = std::exp(((-currentAngle) / RC));
-            samples[i] = (float)sample;
-            currentAngle += angleDelta;
-        }
-        /*Charge*/
-        currentAngle = 0.0; 
-        for (unsigned int i = (2 * (LFO_tableSize / 4)); i < (3 * (LFO_tableSize / 4) - 1); ++i)
-        {
-            auto sample = -1 + std::exp(((-currentAngle) / RC));
-            samples[i] = (float)sample;
-            currentAngle += angleDelta;
-        }
-        /*Discharge*/
-        currentAngle = 0.0; 
-        for (unsigned int i = (3 * (LFO_tableSize / 4)) / 2; i < (4 * (LFO_tableSize / 4) - 1) / 2; ++i)
-        {
-            auto sample = -std::exp(((-currentAngle) / RC));
-            samples[i] = (float)sample;
-            currentAngle += angleDelta;
-        }
-
         ///*Charge*/
-        //for (unsigned int i = 0; i < (LFO_tableSize / 2) - 1; ++i)
+        //for (unsigned int i = 0; i < (1 * (LFO_tableSize / 4) - 1); ++i)
         //{
         //    auto sample = 1 - std::exp(((-currentAngle) / RC));
         //    samples[i] = (float)sample;
         //    currentAngle += angleDelta;
         //}
         ///*Discharge*/
-        //currentAngle = 0.0;
-        //for (unsigned int i = LFO_tableSize / 2; i < LFO_tableSize; ++i)
+        //currentAngle = 0.0; 
+        //for (unsigned int i = (1 * (LFO_tableSize/4)); i < (2*(LFO_tableSize/4)-1); ++i)
         //{
         //    auto sample = std::exp(((-currentAngle) / RC));
         //    samples[i] = (float)sample;
         //    currentAngle += angleDelta;
         //}
+        ///*Charge*/
+        //currentAngle = 0.0; 
+        //for (unsigned int i = (2 * (LFO_tableSize / 4)); i < (3 * (LFO_tableSize / 4) - 1); ++i)
+        //{
+        //    auto sample = -1 + std::exp(((-currentAngle) / RC));
+        //    samples[i] = (float)sample;
+        //    currentAngle += angleDelta;
+        //}
+        ///*Discharge*/
+        //currentAngle = 0.0; 
+        //for (unsigned int i = (3 * (LFO_tableSize / 4)) / 2; i < (4 * (LFO_tableSize / 4) - 1) / 2; ++i)
+        //{
+        //    auto sample = -std::exp(((-currentAngle) / RC));
+        //    samples[i] = (float)sample;
+        //    currentAngle += angleDelta;
+        //}
+
+        /*Charge*/
+        for (unsigned int i = 0; i < (LFO_tableSize / 2) - 1; ++i)
+        {
+            auto sample = 1 - std::exp(((-currentAngle) / RC));
+            samples[i] = (float)sample;
+            currentAngle += angleDelta;
+        }
+        /*Discharge*/
+        currentAngle = 0.0;
+        for (unsigned int i = LFO_tableSize / 2; i < LFO_tableSize; ++i)
+        {
+            auto sample = std::exp(((-currentAngle) / RC));
+            samples[i] = (float)sample;
+            currentAngle += angleDelta;
+        }
 
     }
     /*Discharge*/
