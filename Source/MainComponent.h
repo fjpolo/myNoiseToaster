@@ -4,8 +4,23 @@
 
 //==============================================================================
 /**
- * 
+ *
  */
+class WaveVisualiser : public juce::AudioVisualiserComponent 
+{
+public:
+    WaveVisualiser() : AudioVisualiserComponent(2) 
+    {
+        setBufferSize(1 << 7);
+        setSamplesPerBlock(1 << 4);
+        setColours(juce::Colours::black, juce::Colours::red);
+    }
+private:
+};
+ //==============================================================================
+ /**
+  *
+  */
 class SineOscillator
 {
 public:
@@ -228,6 +243,9 @@ private:
 
     /**/
     double samplerate;
+
+    /*Oscilloscope*/
+    WaveVisualiser oscilloscope;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };

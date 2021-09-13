@@ -250,8 +250,10 @@ MainComponent::MainComponent()
     LFO_createWavetable();
     AREG_createWavetable();
     setAudioChannels(0, 2); // no inputs, two outputs
-}
 
+    /*Scope*/
+    addAndMakeVisible(oscilloscope);
+}
 MainComponent::~MainComponent()
 {
     // This shuts down the audio device and clears the audio source.
@@ -287,8 +289,10 @@ void MainComponent::prepareToPlay (int samplesPerBlockExpected, double sampleRat
     LFO_oscillators.add(oscillator2);
     /*AREG*/
     AREG_oscillators.add(oscillator3);
-}
 
+    /*Scope*/
+    oscilloscope.clear();
+}
 void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill)
 {
     /**/
@@ -334,6 +338,10 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& buffer
                 if (LFO_level != 0.0f) {
                     leftBuffer[sample] += levelSample * LFO_levelSample;
                     rightBuffer[sample] += levelSample * LFO_levelSample;
+                    /*AM*/
+                    //leftBuffer[sample] += LFO_level * (1 + levelSample + LFO_levelSample);
+                    //rightBuffer[sample] += LFO_level * (1 + levelSample + LFO_levelSample);
+                    /*FM*/
                 }
                 else
                 {
@@ -393,9 +401,11 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& buffer
             leftBuffer[sample] *= Output_level;
             rightBuffer[sample] *= Output_level;
         }
+
+        /*Scope*/
+        oscilloscope.pushBuffer(bufferToFill);
     }
 }
-
 void MainComponent::releaseResources()
 {
     // This will be called when the audio device stops, or when it is being
@@ -414,7 +424,6 @@ void MainComponent::paint (juce::Graphics& g)
     auto imageBackground = juce::ImageCache::getFromMemory(BinaryData::Background_PNG, BinaryData::Background_PNGSize);
     g.drawImageAt(imageBackground, 0, 0);
 }
-
 void MainComponent::resized()
 {
     // This is called when the MainComponent is resized.
@@ -493,20 +502,26 @@ void MainComponent::resized()
 
     /*VCA dials*/
     const int VCA_toggleButtonRadius{ 20 };
-    const int VCA_toggleButtonDiameter{ VCO_toggleButtonRadius * 2 };
+    const int VCA_toggleButtonDiameter{ VCA_toggleButtonRadius * 2 };
     const int VCA_ToggleButtonX{ 659 };
     const int VCA_ToggleButtonY{ 469 };
     VCA_toggleButton.setBounds(VCA_ToggleButtonX - VCA_toggleButtonRadius, VCA_ToggleButtonY - VCA_toggleButtonRadius, VCA_toggleButtonDiameter, VCA_toggleButtonDiameter);
 
     /*PWR dials*/
     const int PWR_toggleButtonRadius{ 20 };
-    const int PWR_toggleButtonDiameter{ VCO_toggleButtonRadius * 2 };
+    const int PWR_toggleButtonDiameter{ PWR_toggleButtonRadius * 2 };
     const int PWR_ToggleButtonX{ 654 };
     const int PWR_ToggleButtonY{ 654 };
     PWR_toggleButton.setBounds(PWR_ToggleButtonX - PWR_toggleButtonRadius, PWR_ToggleButtonY - PWR_toggleButtonRadius, PWR_toggleButtonDiameter, PWR_toggleButtonDiameter);
 
-}
+    /*Scope*/
+    const int scopeWidth{ 140 };
+    const int scopeHeight{ 140 };
+    const int scopeX{ 656 };
+    const int scopeY{ 121 };
+    oscilloscope.setBounds(scopeX - scopeWidth / 2, scopeY - scopeHeight / 2, scopeWidth, scopeHeight);
 
+}
 void MainComponent::buttonClicked(juce::Button* button)
 {
     /*VCO_sync_toggleButton*/
@@ -638,7 +653,6 @@ void MainComponent::buttonClicked(juce::Button* button)
         AREG_manualGate_state = true;
     }
 }
-
 void MainComponent::sliderValueChanged(juce::Slider* slider)
 {
     /*VCO_frequency_dial*/
@@ -749,8 +763,8 @@ void MainComponent::LFO_createWavetable()
 {
     LFO_waveTable.setSize(1, (int)LFO_tableSize);
     auto* samples = LFO_waveTable.getWritePointer(0);
-    const auto RC = 1000 * 0.0000033f;
-
+    const auto RC = 20.0f;
+    const auto RC2 = 1000 * 0.0000033f;
     auto angleDelta = juce::MathConstants<double>::twoPi / (double)(LFO_tableSize - 1);
     auto currentAngle = 0.0;
 
@@ -801,37 +815,38 @@ void MainComponent::LFO_createWavetable()
             samples[i] = (float)sample;
             currentAngle += angleDelta;
         }
+
+        ///*Charge*/
+        //for (unsigned int i = 0; i < (LFO_tableSize / 2) - 1; ++i)
+        //{
+        //    auto sample = 1 - std::exp(((-currentAngle) / RC));
+        //    samples[i] = (float)sample;
+        //    currentAngle += angleDelta;
+        //}
+        ///*Discharge*/
+        //currentAngle = 0.0;
+        //for (unsigned int i = LFO_tableSize / 2; i < LFO_tableSize; ++i)
+        //{
+        //    auto sample = std::exp(((-currentAngle) / RC));
+        //    samples[i] = (float)sample;
+        //    currentAngle += angleDelta;
+        //}
+
     }
-    ///*Spikes*/
-    //if (LFO_derivate_state && !LFO_integrate_state)
-    //{
-    //    for (unsigned int i = 0; i < LFO_tableSize / 2 - 1; ++i)
-    //    {
-    //        auto sample = std::exp(((-currentAngle) / RC));
-    //        samples[i] = (float)sample;
-    //        currentAngle += angleDelta;
-    //    }
-    //    for (unsigned int i = LFO_tableSize / 2; i < LFO_tableSize / 2; ++i)
-    //    {
-    //        auto sample = -std::exp(((-currentAngle) / RC));
-    //        samples[i] = (float)sample;
-    //        currentAngle += angleDelta;
-    //    }
-    //}
     /*Discharge*/
     if (LFO_derivate_state && !LFO_integrate_state) 
     {   
         currentAngle = 0.0;
         for (unsigned int i = 0; i < (LFO_tableSize / 2 - 1); ++i)
         {
-            auto sample = std::exp(((-currentAngle) / RC));
+            auto sample = std::exp(((-currentAngle) / RC2));
             samples[i] = (float)sample;
             currentAngle += angleDelta;
         }
         currentAngle = 0.0;
         for (unsigned int i = LFO_tableSize / 2; i < LFO_tableSize; ++i)
         {
-            auto sample = -std::exp(((-currentAngle) / RC));
+            auto sample = -std::exp(((-currentAngle) / RC2));
             samples[i] = (float)sample;
             currentAngle += angleDelta;
         }

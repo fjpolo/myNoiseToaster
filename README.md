@@ -23,7 +23,7 @@ Digital version of Noise Toaster based on the book "Make: Analog Synthesizers. A
 - VCO
 	✔ Sine Oscilator
 	
-	✔ Sync On-Off
+	✖ Sync On-Off
 	
 	✔ LFO Mod Depth
 	
