@@ -209,7 +209,6 @@ MainComponent::MainComponent()
         PWR_toggleButton.setToggleState(true, juce::NotificationType::dontSendNotification);
         PWR_toggleButton.setButtonText("ON");
     }
-
     PWR_toggleButton.addListener(this);
 
 
@@ -311,87 +310,89 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& buffer
     //}
 
     /*Output*/
-    for (auto sample = 0; sample < bufferToFill.numSamples; ++sample)
-    {
-        auto levelSample = oscillators[0]->getNextSample();
-        auto LFO_levelSample = LFO_oscillators[0]->getNextSample() * LFO_level;
-        auto AREG_levelSample = AREG_oscillators[0]->getNextSample() * AREG_level;
-
-        /*VCO_syncState*/
-        if (VCO_syncState) {
-            if (LFO_level != 0.0f) {
-                leftBuffer[sample] += (levelSample + LFO_levelSample);
-                rightBuffer[sample] += (levelSample + LFO_levelSample);
-            }
-            else
-            {
-                leftBuffer[sample] += levelSample;
-                rightBuffer[sample] += levelSample;
-            }
-        } // END if VCO_syncState
-        /*!VCO_syncState*/
-        else {
-            if (LFO_level != 0.0f) {
-                leftBuffer[sample] += levelSample * LFO_levelSample;
-                rightBuffer[sample] += levelSample * LFO_levelSample;
-            }
-            else
-            {
-                leftBuffer[sample] += levelSample;
-                rightBuffer[sample] += levelSample;
-            }
-        } // END if !VCO_syncState
-
-        /*VCO_ARmodState*/
-        if (VCO_ARmodState)
+    if (PWR_state) {
+        for (auto sample = 0; sample < bufferToFill.numSamples; ++sample)
         {
-            const auto RC = 1000 * 0.0000033f;
-            if (AREG_manualGate_state != AREG_manualGate_lastState)
-                AREG_manualCurrentAngle = 0.0f; 
-            AREG_manualGate_lastState = AREG_manualGate_state;
-        //    /*Modulate using AR*/
+            auto levelSample = oscillators[0]->getNextSample();
+            auto LFO_levelSample = LFO_oscillators[0]->getNextSample() * LFO_level;
+            auto AREG_levelSample = AREG_oscillators[0]->getNextSample() * AREG_level;
 
-            /*Manual - !AREG_repeat_state*/
-            if(!AREG_repeat_state)
+            /*VCO_syncState*/
+            if (VCO_syncState) {
+                if (LFO_level != 0.0f) {
+                    leftBuffer[sample] += (levelSample + LFO_levelSample);
+                    rightBuffer[sample] += (levelSample + LFO_levelSample);
+                }
+                else
+                {
+                    leftBuffer[sample] += levelSample;
+                    rightBuffer[sample] += levelSample;
+                }
+            } // END if VCO_syncState
+            /*!VCO_syncState*/
+            else {
+                if (LFO_level != 0.0f) {
+                    leftBuffer[sample] += levelSample * LFO_levelSample;
+                    rightBuffer[sample] += levelSample * LFO_levelSample;
+                }
+                else
+                {
+                    leftBuffer[sample] += levelSample;
+                    rightBuffer[sample] += levelSample;
+                }
+            } // END if !VCO_syncState
+
+            /*VCO_ARmodState*/
+            if (VCO_ARmodState)
             {
-                /*Manual*/
-                
-                if (AREG_manualGate_state) {
-                    //AREG_manualCurrentValue = 1 - std::exp(((-AREG_manualCurrentAngle) / RC * ((AREG_attackValue + AREG_releaseValue) / 2.0f)));
-                    AREG_manualCurrentValue = std::exp(((-AREG_manualCurrentAngle) /  20*(AREG_attackValue * AREG_releaseValue)));
-                    //AREG_manualCurrentValue = std::exp(((-AREG_manualCurrentAngle) / RC ));
-                    AREG_manualCurrentValue = 1.001 - AREG_manualCurrentValue;
-                    if ( (AREG_manualCurrentValue >= 1) )
-                    {
-                        AREG_manualGate_state = false;
+                const auto RC = 1000 * 0.0000033f;
+                if (AREG_manualGate_state != AREG_manualGate_lastState)
+                    AREG_manualCurrentAngle = 0.0f;
+                AREG_manualGate_lastState = AREG_manualGate_state;
+                //    /*Modulate using AR*/
+
+                    /*Manual - !AREG_repeat_state*/
+                if (!AREG_repeat_state)
+                {
+                    /*Manual*/
+
+                    if (AREG_manualGate_state) {
+                        //AREG_manualCurrentValue = 1 - std::exp(((-AREG_manualCurrentAngle) / RC * ((AREG_attackValue + AREG_releaseValue) / 2.0f)));
+                        AREG_manualCurrentValue = std::exp(((-AREG_manualCurrentAngle) / 20 * (AREG_attackValue * AREG_releaseValue)));
+                        //AREG_manualCurrentValue = std::exp(((-AREG_manualCurrentAngle) / RC ));
+                        AREG_manualCurrentValue = 1.001 - AREG_manualCurrentValue;
+                        if ((AREG_manualCurrentValue >= 1))
+                        {
+                            AREG_manualGate_state = false;
+                        }
+                        auto AREG_levelSample = AREG_level * AREG_manualCurrentValue;
+                        AREG_manualCurrentAngle += AREG_angleDelta;
                     }
-                    auto AREG_levelSample = AREG_level * AREG_manualCurrentValue;
-                    AREG_manualCurrentAngle += AREG_angleDelta;
-                }
-                else {
-                    //AREG_manualCurrentValue = std::exp(((-AREG_manualCurrentAngle) / RC * ((AREG_attackValue + AREG_releaseValue) / 2.0f)));
-                    AREG_manualCurrentValue = std::exp(((-AREG_manualCurrentAngle) / 20*(AREG_attackValue * AREG_releaseValue)));
-                    auto AREG_levelSample = AREG_level * AREG_manualCurrentValue;
-                    AREG_manualCurrentAngle += AREG_angleDelta;
-                }
+                    else {
+                        //AREG_manualCurrentValue = std::exp(((-AREG_manualCurrentAngle) / RC * ((AREG_attackValue + AREG_releaseValue) / 2.0f)));
+                        AREG_manualCurrentValue = std::exp(((-AREG_manualCurrentAngle) / 20 * (AREG_attackValue * AREG_releaseValue)));
+                        auto AREG_levelSample = AREG_level * AREG_manualCurrentValue;
+                        AREG_manualCurrentAngle += AREG_angleDelta;
+                    }
 
-                /**/
-                leftBuffer[sample] *= AREG_manualCurrentValue;
-                rightBuffer[sample] *= AREG_manualCurrentValue;
-                
-            } // END if !AREG_repeat_state
-            /*Repeat - AREG_repeat_state*/
-            else 
-            {
-                leftBuffer[sample] += levelSample * AREG_levelSample;
-                rightBuffer[sample] += levelSample * AREG_levelSample;
-            } // END else AREG_repeat_state
+                    /**/
+                    leftBuffer[sample] *= AREG_manualCurrentValue;
+                    rightBuffer[sample] *= AREG_manualCurrentValue;
 
-        } // END if VCO_syncState
-        
-        /*Level*/
-        leftBuffer[sample] *= Output_level;
-        rightBuffer[sample] *= Output_level;
+                } // END if !AREG_repeat_state
+                /*Repeat - AREG_repeat_state*/
+                else
+                {
+                    leftBuffer[sample] += levelSample * AREG_levelSample;
+                    rightBuffer[sample] += levelSample * AREG_levelSample;
+                } // END else AREG_repeat_state
+
+            } // END if VCO_syncState
+
+            /*Level*/
+            leftBuffer[sample] *= Output_level;
+            rightBuffer[sample] *= Output_level;
+        }
     }
 }
 

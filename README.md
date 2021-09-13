@@ -6,7 +6,7 @@ Digital version of Noise Toaster based on the book "Make: Analog Synthesizers. A
 
 - Power
 
-	✖ On-Off
+	✔ On-Off
 	
 - Output
 	
@@ -27,9 +27,9 @@ Digital version of Noise Toaster based on the book "Make: Analog Synthesizers. A
 	
 	✔ LFO Mod Depth
 	
-	✖ AR Mod Depth
+	✔ AR Mod Depth
 	
-	✖ AR On-Off
+	✔ AR On-Off
 	
 - LFO
 	
@@ -53,13 +53,13 @@ Digital version of Noise Toaster based on the book "Make: Analog Synthesizers. A
 	
 - AREG
 	
-	✖ Attack
+	✔ Attack
 	
-	✖ Release 
+	✔ Release 
 	
-	✖ Manual gate
+	✔ Manual gate
 	
-	✖ Manual-Repeat
+	✔ Manual-Repeat
 	
 - VCA
 
