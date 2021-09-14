@@ -19,6 +19,7 @@ MyNoiseToasterAudioProcessorEditor::MyNoiseToasterAudioProcessorEditor (MyNoiseT
     Output_volume_dial.setSliderStyle(juce::Slider::SliderStyle::Rotary);
     Output_volume_dial.setTextBoxStyle(juce::Slider::NoTextBox, true, 100, 25);
     Output_volume_dial.setRange(0, 1);
+    Output_volume_dial.setValue(audioProcessor.Output_gain);
 
     /*** VCO dials ***/
 
@@ -27,8 +28,9 @@ MyNoiseToasterAudioProcessorEditor::MyNoiseToasterAudioProcessorEditor (MyNoiseT
     VCO_frequency_dial.setSliderStyle(juce::Slider::SliderStyle::Rotary);
     VCO_frequency_dial.setTextBoxStyle(juce::Slider::NoTextBox, true, 100, 25);
     VCO_frequency_dial.setRange(0.01, 1500);
+    VCO_frequency_dial.setSkewFactorFromMidPoint(750);
     VCO_frequency_dial.addListener(this);
-    VCO_frequency_dial.setValue(220);
+    VCO_frequency_dial.setValue(audioProcessor.VCO_frequency);
     /*VCO_LFO_ModDepth_dial*/
     addAndMakeVisible(VCO_LFO_ModDepth_dial);
     VCO_LFO_ModDepth_dial.setSliderStyle(juce::Slider::SliderStyle::Rotary);
@@ -46,7 +48,7 @@ MyNoiseToasterAudioProcessorEditor::MyNoiseToasterAudioProcessorEditor (MyNoiseT
     /*VCO_sync_toggleButton*/
     addAndMakeVisible(VCO_sync_toggleButton);
     VCO_sync_toggleButton.setColour(juce::TextButton::buttonColourId, juce::Colours::black);
-    if (!VCO_syncState) {
+    if (!audioProcessor.VCO_syncState) {
         VCO_sync_toggleButton.setToggleState(false, juce::NotificationType::dontSendNotification);
         VCO_sync_toggleButton.setButtonText("OFF");
     }
@@ -58,7 +60,7 @@ MyNoiseToasterAudioProcessorEditor::MyNoiseToasterAudioProcessorEditor (MyNoiseT
     /*VCO_ARmod_toggleButton*/
     addAndMakeVisible(VCO_ARmod_toggleButton);
     VCO_ARmod_toggleButton.setColour(juce::TextButton::buttonColourId, juce::Colours::black);
-    if (!VCO_ARmodState) {
+    if (!audioProcessor.VCO_ARmodState) {
         VCO_ARmod_toggleButton.setToggleState(false, juce::NotificationType::dontSendNotification);
         VCO_ARmod_toggleButton.setButtonText("OFF");
     }
@@ -75,12 +77,16 @@ MyNoiseToasterAudioProcessorEditor::MyNoiseToasterAudioProcessorEditor (MyNoiseT
     addAndMakeVisible(VCLPF_cutoffFrequency_dial);
     VCLPF_cutoffFrequency_dial.setSliderStyle(juce::Slider::SliderStyle::Rotary);
     VCLPF_cutoffFrequency_dial.setTextBoxStyle(juce::Slider::NoTextBox, true, 100, 25);
-    VCLPF_cutoffFrequency_dial.setRange(0, 10);
+    VCLPF_cutoffFrequency_dial.setRange(0.01f, 25000.0f);
+    VCLPF_cutoffFrequency_dial.addListener(this);
+    VCLPF_cutoffFrequency_dial.setValue(audioProcessor.VCLPF_cutoffFrequency);
     /*VCLPF_resonance_dial*/
     addAndMakeVisible(VCLPF_resonance_dial);
     VCLPF_resonance_dial.setSliderStyle(juce::Slider::SliderStyle::Rotary);
     VCLPF_resonance_dial.setTextBoxStyle(juce::Slider::NoTextBox, true, 100, 25);
-    VCLPF_resonance_dial.setRange(0, 10);
+    VCLPF_resonance_dial.setRange(0.01f, 1.0f);
+    VCLPF_resonance_dial.addListener(this);
+    VCLPF_resonance_dial.setValue(audioProcessor.VCLPF_resonance);
     /*VCLPF_ModDepth_dial*/
     addAndMakeVisible(VCLPF_ModDepth_dial);
     VCLPF_ModDepth_dial.setSliderStyle(juce::Slider::SliderStyle::Rotary);
@@ -97,7 +103,7 @@ MyNoiseToasterAudioProcessorEditor::MyNoiseToasterAudioProcessorEditor (MyNoiseT
     /*VCLPF_whiteNoise_toggleButton*/
     addAndMakeVisible(VCLPF_whiteNoise_toggleButton);
     VCLPF_whiteNoise_toggleButton.setColour(juce::TextButton::buttonColourId, juce::Colours::black);
-    if (!VCLPF_whiteNoiseState) {
+    if (!audioProcessor.VCLPF_whiteNoiseState) {
         VCLPF_whiteNoise_toggleButton.setToggleState(false, juce::NotificationType::dontSendNotification);
         VCLPF_whiteNoise_toggleButton.setButtonText("OFF");
     }
@@ -109,7 +115,7 @@ MyNoiseToasterAudioProcessorEditor::MyNoiseToasterAudioProcessorEditor (MyNoiseT
     /*VCLPF_LFO_toggleButton*/
     addAndMakeVisible(VCLPF_LFO_toggleButton);
     VCLPF_LFO_toggleButton.setColour(juce::TextButton::buttonColourId, juce::Colours::black);
-    if (!VCLPF_whiteNoiseState) {
+    if (!audioProcessor.VCLPF_whiteNoiseState) {
         VCLPF_LFO_toggleButton.setToggleState(false, juce::NotificationType::dontSendNotification);
         VCLPF_LFO_toggleButton.setButtonText("AR");
     }
@@ -142,7 +148,7 @@ MyNoiseToasterAudioProcessorEditor::MyNoiseToasterAudioProcessorEditor (MyNoiseT
     /*AREG_repeat_toggleButton*/
     addAndMakeVisible(AREG_repeat_toggleButton);
     AREG_repeat_toggleButton.setColour(juce::TextButton::buttonColourId, juce::Colours::black);
-    if (!AREG_repeat_state) {
+    if (!audioProcessor.AREG_repeat_state) {
         AREG_repeat_toggleButton.setToggleState(false, juce::NotificationType::dontSendNotification);
         AREG_repeat_toggleButton.setButtonText("M");
     }
@@ -160,14 +166,14 @@ MyNoiseToasterAudioProcessorEditor::MyNoiseToasterAudioProcessorEditor (MyNoiseT
     addAndMakeVisible(LFO_rate_dial);
     LFO_rate_dial.setSliderStyle(juce::Slider::SliderStyle::Rotary);
     LFO_rate_dial.setTextBoxStyle(juce::Slider::NoTextBox, true, 100, 25);
-    LFO_rate_dial.setRange(1, 200);
+    LFO_rate_dial.setRange(0.01f, 200.0f);
     LFO_rate_dial.addListener(this);
-    LFO_rate_dial.setValue(10);
+    LFO_rate_dial.setValue(audioProcessor.LFO_frequency);
 
     /*LFO_integrate_toggleButton*/
     addAndMakeVisible(LFO_integrate_toggleButton);
     LFO_integrate_toggleButton.setColour(juce::TextButton::buttonColourId, juce::Colours::black);
-    if (!LFO_integrate_state) {
+    if (!audioProcessor.LFO_integrate_state) {
         LFO_integrate_toggleButton.setToggleState(false, juce::NotificationType::dontSendNotification);
         LFO_integrate_toggleButton.setButtonText("OFF");
     }
@@ -179,7 +185,7 @@ MyNoiseToasterAudioProcessorEditor::MyNoiseToasterAudioProcessorEditor (MyNoiseT
     /*LFO_derivate_toggleButton*/
     addAndMakeVisible(LFO_derivate_toggleButton);
     LFO_derivate_toggleButton.setColour(juce::TextButton::buttonColourId, juce::Colours::black);
-    if (!LFO_derivate_state) {
+    if (!audioProcessor.LFO_derivate_state) {
         LFO_derivate_toggleButton.setToggleState(false, juce::NotificationType::dontSendNotification);
         LFO_derivate_toggleButton.setButtonText("OFF");
     }
@@ -195,7 +201,7 @@ MyNoiseToasterAudioProcessorEditor::MyNoiseToasterAudioProcessorEditor (MyNoiseT
     /*VCA_toggleButton*/
     addAndMakeVisible(VCA_toggleButton);
     VCA_toggleButton.setColour(juce::TextButton::buttonColourId, juce::Colours::black);
-    if (!VCA_state) {
+    if (!audioProcessor.VCA_state) {
         VCA_toggleButton.setToggleState(false, juce::NotificationType::dontSendNotification);
         VCA_toggleButton.setButtonText("OFF");
     }
@@ -210,7 +216,7 @@ MyNoiseToasterAudioProcessorEditor::MyNoiseToasterAudioProcessorEditor (MyNoiseT
     /*PWR_toggleButton*/
     addAndMakeVisible(PWR_toggleButton);
     PWR_toggleButton.setColour(juce::TextButton::buttonColourId, juce::Colours::black);
-    if (!PWR_state) {
+    if (!audioProcessor.PWR_state) {
         PWR_toggleButton.setToggleState(false, juce::NotificationType::dontSendNotification);
         PWR_toggleButton.setButtonText("OFF");
     }
@@ -221,7 +227,7 @@ MyNoiseToasterAudioProcessorEditor::MyNoiseToasterAudioProcessorEditor (MyNoiseT
     PWR_toggleButton.addListener(this);
 
     /*Scope*/
-    addAndMakeVisible(oscilloscope);
+    addAndMakeVisible(audioProcessor.oscilloscope);
 
     /*Window*/
     setSize(785, 783);
@@ -259,7 +265,7 @@ void MyNoiseToasterAudioProcessorEditor::resized()
     const int Output_dialY{ 272 };
     const int Output_dialX_volume{ 656 };
     Output_volume_dial.setBounds(Output_dialX_volume - Output_dialRadius, Output_dialY - Output_dialRadius, Output_dialDiameter, Output_dialDiameter);
-    //Output_volume_dial.addListener(this);
+    Output_volume_dial.addListener(this);
 
     /*VCO dials*/
     const int VCO_dialRadius{ 40 };
@@ -342,7 +348,9 @@ void MyNoiseToasterAudioProcessorEditor::resized()
     const int scopeHeight{ 100 };
     const int scopeX{ 658 };
     const int scopeY{ 121 };
-    oscilloscope.setBounds(scopeX - scopeWidth / 2, scopeY - scopeHeight / 2 + 20, scopeWidth, scopeHeight);
+    audioProcessor.oscilloscope.setBounds(scopeX - scopeWidth / 2, scopeY - scopeHeight / 2 + 20, scopeWidth, scopeHeight);
+
+    
 }
 
 //==============================================================================
@@ -351,12 +359,12 @@ void MyNoiseToasterAudioProcessorEditor::buttonClicked(juce::Button* button)
     /*VCO_sync_toggleButton*/
     if (button == &VCO_sync_toggleButton)
     {
-        if (!VCO_syncState) {
-            VCO_syncState = true;
+        if (!audioProcessor.VCO_syncState) {
+            audioProcessor.VCO_syncState = true;
             VCO_sync_toggleButton.setButtonText("ON");
         }
         else {
-            VCO_syncState = false;
+            audioProcessor.VCO_syncState = false;
             VCO_sync_toggleButton.setButtonText("OFF");
         }
     }
@@ -364,12 +372,12 @@ void MyNoiseToasterAudioProcessorEditor::buttonClicked(juce::Button* button)
     /*VCO_ARmod_toggleButton*/
     if (button == &VCO_ARmod_toggleButton)
     {
-        if (!VCO_ARmodState) {
-            VCO_ARmodState = true;
+        if (!audioProcessor.VCO_ARmodState) {
+            audioProcessor.VCO_ARmodState = true;
             VCO_ARmod_toggleButton.setButtonText("ON");
         }
         else {
-            VCO_ARmodState = false;
+            audioProcessor.VCO_ARmodState = false;
             VCO_ARmod_toggleButton.setButtonText("OFF");
         }
     }
@@ -377,12 +385,12 @@ void MyNoiseToasterAudioProcessorEditor::buttonClicked(juce::Button* button)
     /*VCLPF_whiteNoise_toggleButton*/
     if (button == &VCLPF_whiteNoise_toggleButton)
     {
-        if (!VCLPF_whiteNoiseState) {
-            VCLPF_whiteNoiseState = true;
+        if (!audioProcessor.VCLPF_whiteNoiseState) {
+            audioProcessor.VCLPF_whiteNoiseState = true;
             VCLPF_whiteNoise_toggleButton.setButtonText("ON");
         }
         else {
-            VCLPF_whiteNoiseState = false;
+            audioProcessor.VCLPF_whiteNoiseState = false;
             VCLPF_whiteNoise_toggleButton.setButtonText("OFF");
         }
     }
@@ -390,12 +398,12 @@ void MyNoiseToasterAudioProcessorEditor::buttonClicked(juce::Button* button)
     /*VCLPF_LFO_toggleButton*/
     if (button == &VCLPF_LFO_toggleButton)
     {
-        if (!VCLPF_LFOState) {
-            VCLPF_LFOState = true;
+        if (!audioProcessor.VCLPF_LFOState) {
+            audioProcessor.VCLPF_LFOState = true;
             VCLPF_LFO_toggleButton.setButtonText("LFO");
         }
         else {
-            VCLPF_LFOState = false;
+            audioProcessor.VCLPF_LFOState = false;
             VCLPF_LFO_toggleButton.setButtonText("AR");
         }
     }
@@ -404,12 +412,12 @@ void MyNoiseToasterAudioProcessorEditor::buttonClicked(juce::Button* button)
     /*VCA_toggleButton*/
     if (button == &VCA_toggleButton)
     {
-        if (!VCA_state) {
-            VCA_state = true;
+        if (!audioProcessor.VCA_state) {
+            audioProcessor.VCA_state = true;
             VCA_toggleButton.setButtonText("ON");
         }
         else {
-            VCA_state = false;
+            audioProcessor.VCA_state = false;
             VCA_toggleButton.setButtonText("OFF");
         }
     }
@@ -417,12 +425,12 @@ void MyNoiseToasterAudioProcessorEditor::buttonClicked(juce::Button* button)
     /*PWR_toggleButton*/
     if (button == &PWR_toggleButton)
     {
-        if (!PWR_state) {
-            PWR_state = true;
+        if (!audioProcessor.PWR_state) {
+            audioProcessor.PWR_state = true;
             PWR_toggleButton.setButtonText("ON");
         }
         else {
-            PWR_state = false;
+            audioProcessor.PWR_state = false;
             PWR_toggleButton.setButtonText("OFF");
         }
     }
@@ -430,13 +438,13 @@ void MyNoiseToasterAudioProcessorEditor::buttonClicked(juce::Button* button)
     /*LFO_integrate_toggleButton*/
     if (button == &LFO_integrate_toggleButton)
     {
-        if (!LFO_integrate_state) {
-            LFO_integrate_state = true;
+        if (!audioProcessor.LFO_integrate_state) {
+            audioProcessor.LFO_integrate_state = true;
             LFO_integrate_toggleButton.setButtonText("I");
             //LFO_createWavetable();
         }
         else {
-            LFO_integrate_state = false;
+            audioProcessor.LFO_integrate_state = false;
             LFO_integrate_toggleButton.setButtonText("OFF");
             //LFO_createWavetable();
         }
@@ -445,13 +453,13 @@ void MyNoiseToasterAudioProcessorEditor::buttonClicked(juce::Button* button)
     /*LFO_derivate_toggleButton*/
     if (button == &LFO_derivate_toggleButton)
     {
-        if (!LFO_derivate_state) {
-            LFO_derivate_state = true;
+        if (!audioProcessor.LFO_derivate_state) {
+            audioProcessor.LFO_derivate_state = true;
             LFO_derivate_toggleButton.setButtonText("D");
             //LFO_createWavetable();
         }
         else {
-            LFO_derivate_state = false;
+            audioProcessor.LFO_derivate_state = false;
             LFO_derivate_toggleButton.setButtonText("OFF");
             //LFO_createWavetable();
         }
@@ -460,13 +468,13 @@ void MyNoiseToasterAudioProcessorEditor::buttonClicked(juce::Button* button)
     /*AREG_repeat_toggleButton*/
     if (button == &AREG_repeat_toggleButton)
     {
-        if (!AREG_repeat_state) {
-            AREG_repeat_state = true;
+        if (!audioProcessor.AREG_repeat_state) {
+            audioProcessor.AREG_repeat_state = true;
             AREG_repeat_toggleButton.setButtonText("R");
             //AREG_setFrequencies();
         }
         else {
-            AREG_repeat_state = false;
+            audioProcessor.AREG_repeat_state = false;
             AREG_repeat_toggleButton.setButtonText("M");
         }
     }
@@ -474,7 +482,7 @@ void MyNoiseToasterAudioProcessorEditor::buttonClicked(juce::Button* button)
     /*AREG_manualGate_toggleButton*/
     if (button == &AREG_manualGate_toggleButton)
     {
-        AREG_manualGate_state = true;
+        audioProcessor.AREG_manualGate_state = true;
     }
 }
 void MyNoiseToasterAudioProcessorEditor::sliderValueChanged(juce::Slider* slider) 
@@ -483,22 +491,24 @@ void MyNoiseToasterAudioProcessorEditor::sliderValueChanged(juce::Slider* slider
     if (slider == &VCO_frequency_dial)
     {
         /*Change VCO frequency*/
-        //VCO_frequency = VCO_frequency_dial.getValue();
-        //VCO_setFrequencies();
+        audioProcessor.VCO_frequency = VCO_frequency_dial.getValue();
+        audioProcessor.VCO_setFrequency();
     }
 
     /*Output_volume_dial*/
     if (slider == &Output_volume_dial)
     {
-        //Output_volume.setGainLinear(Output_volume_dial.getValue());
-        //Output_level = Output_volume_dial.getValue();
+        /*Change Volume (gain)*/
+        audioProcessor.Output_gain = Output_volume_dial.getValue();
+        audioProcessor.Output_setGain();
     }
 
     /*LFO_rate_dial*/
     if (slider == &LFO_rate_dial)
     {
-        //LFO_frequency = LFO_rate_dial.getValue();
-        //LFO_setFrequencies();
+        /*Change LFO frequency*/
+        audioProcessor.LFO_frequency = LFO_rate_dial.getValue();
+        audioProcessor.LFO_changeWave();
     }
 
     /*VCO_LFO_ModDepth_dial*/
@@ -518,6 +528,10 @@ void MyNoiseToasterAudioProcessorEditor::sliderValueChanged(juce::Slider* slider
     {
         //VCLPF_inputSelect_state = VCLPF_inputSelect_dial.getValue();
         //VCO_createWavetable();
+        /**/
+        audioProcessor.VCO_waveType = static_cast<WaveType>( VCLPF_inputSelect_dial.getValue() );
+        audioProcessor.VCO_changeWave();
+        audioProcessor.VCO_setFrequency();
     }
 
     /*AREG_attack_dial*/
@@ -532,5 +546,19 @@ void MyNoiseToasterAudioProcessorEditor::sliderValueChanged(juce::Slider* slider
     {
         //AREG_releaseValue = AREG_release_dial.getValue();
         //if (AREG_repeat_state) AREG_setFrequencies();
+    }
+
+    /*VCLPF_cutoffFrequency_dial*/
+    if (slider == &VCLPF_cutoffFrequency_dial)
+    {
+        audioProcessor.VCLPF_cutoffFrequency = VCLPF_cutoffFrequency_dial.getValue();
+        audioProcessor.VCLPF_setFrequency();
+    }
+
+    /*VCLPF_resonance_dial*/
+    if (slider == &VCLPF_resonance_dial)
+    {
+        audioProcessor.VCLPF_resonance = VCLPF_resonance_dial.getValue();
+        audioProcessor.VCLPF_setResonance();
     }
 }

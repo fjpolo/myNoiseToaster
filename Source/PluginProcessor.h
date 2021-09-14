@@ -10,6 +10,33 @@
 
 #include <JuceHeader.h>
 
+/**/
+const auto BUFFER_SIZE = 1 << 7;
+const auto OSC_BLOCK_SIZE = 1 << 4;
+const auto MAX_CUTOFF_FREQ = 100000.0f;
+
+enum class WaveType {
+    Sawtooh = 0,
+    Off,
+    Square
+};
+
+//==============================================================================
+/**
+ *
+ */
+class WaveVisualiser : public juce::AudioVisualiserComponent
+{
+public:
+    WaveVisualiser() : AudioVisualiserComponent(2)
+    {
+        setBufferSize(BUFFER_SIZE);
+        setSamplesPerBlock(OSC_BLOCK_SIZE);
+        setColours(juce::Colours::black, juce::Colours::red);
+    }
+private:
+};
+
 //==============================================================================
 /**
 */
@@ -53,7 +80,67 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
 
+    /*Parameters*/
+    juce::dsp::ProcessSpec spec; 
+    double VCO_frequency{ 220.0f };
+    double LFO_frequency{ 3.0f };
+    WaveType VCO_waveType;
+    double AREG_attackValue;
+    double AREG_releaseValue;
+    double Output_gain{0.25f};
+    double VCLPF_cutoffFrequency{25000.0f};
+    double VCLPF_resonance{0.4f};
+
+    /*Button states*/
+    bool PWR_state{ false };
+    bool VCO_syncState{ false };
+    bool VCO_ARmodState{ false };
+    bool VCLPF_whiteNoiseState{ false };
+    bool VCLPF_LFOState{ false };
+    bool AREG_repeat_state{ false };
+    bool AREG_manualGate_state{ false };
+    bool LFO_integrate_state{ false };
+    bool LFO_derivate_state{ false };
+    bool VCA_state{ false };
+
+    /*Processor indices - top-down order*/
+    enum
+    {
+        VCO_oscIndex,
+        VCLPF_filterIndex,
+        Output_gainIndex
+    };
+
+    /*Processing chain*/
+    juce::dsp::ProcessorChain< 
+                                juce::dsp::Oscillator<float>, 
+                                juce::dsp::LadderFilter<float>,
+                                juce::dsp::Gain<float> 
+                             > processorChain;
+
+    /*LFO*/
+    juce::dsp::AudioBlock<float> tempBlock; 
+    static constexpr size_t LFO_UpdateRate = 100;
+    size_t lfoUpdateCounter = LFO_UpdateRate;
+    juce::dsp::Oscillator<float> lfo;
+
+    /*Oscilloscope*/
+    WaveVisualiser oscilloscope;
+
+    void VCO_changeWave();
+    void LFO_changeWave();
+    void Output_setGain();
+    void VCO_setFrequency();
+    void LFO_setFrequency();
+    void VCLPF_setFrequency();
+    void VCLPF_setResonance();
+
 private:
+    //==============================================================================
+
+    
+    
+
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MyNoiseToasterAudioProcessor)
 };

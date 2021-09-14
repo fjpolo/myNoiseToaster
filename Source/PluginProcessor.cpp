@@ -15,14 +15,21 @@ MyNoiseToasterAudioProcessor::MyNoiseToasterAudioProcessor()
      : AudioProcessor (BusesProperties()
                      #if ! JucePlugin_IsMidiEffect
                       #if ! JucePlugin_IsSynth
-                       .withInput  ("Input",  juce::AudioChannelSet::stereo(), true)
+                       .withInput  ("Input",  juce::AudioChannelSet::stereo(), false)
                       #endif
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                      #endif
                        )
 #endif
 {
-   
+    /*get a reference to the Oscillator by supplying the index of the process and use the processorChain.get<>() method*/
+    auto& osc = processorChain.template get<VCO_oscIndex>();
+    /*initialise the oscillator using a lambda function and the std::sin function to provide the sine wave to the oscillator*/
+    osc.initialise( [](float x) { return (x / juce::MathConstants<float>::pi); }, BUFFER_SIZE);
+    
+    /*LFO*/
+    lfo.initialise([](float x) { return std::sin(x); }, 128);
+    lfo.setFrequency(LFO_frequency);
 }
 
 MyNoiseToasterAudioProcessor::~MyNoiseToasterAudioProcessor()
@@ -94,8 +101,23 @@ void MyNoiseToasterAudioProcessor::changeProgramName (int index, const juce::Str
 //==============================================================================
 void MyNoiseToasterAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
-    // Use this method as the place to do any pre-playback
-    // initialisation that you need..
+    /*Specifications*/
+    spec.maximumBlockSize = samplesPerBlock;
+    spec.sampleRate = sampleRate;
+    spec.numChannels = getTotalNumInputChannels();
+
+    /*Chain*/
+    processorChain.prepare(spec);
+    /*To set the frequency of the oscillator, we need to once again get a reference to it*/
+    auto& osc = processorChain.template get<VCO_oscIndex>();
+    osc.setFrequency(VCO_frequency);
+    /**/
+    auto& gain = processorChain.template get<Output_gainIndex>();
+    gain.setGainLinear(0.25f);
+    /**/
+    auto& filter = processorChain.get<VCLPF_filterIndex>();
+    filter.setCutoffFrequencyHz(VCLPF_cutoffFrequency);
+    filter.setResonance(VCLPF_resonance);
 }
 
 void MyNoiseToasterAudioProcessor::releaseResources()
@@ -145,17 +167,29 @@ void MyNoiseToasterAudioProcessor::processBlock (juce::AudioBuffer<float>& buffe
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
 
-    // This is the place where you'd normally do the guts of your plugin's
-    // audio processing...
-    // Make sure to reset the state if your inner loop is processing
-    // the samples and the outer loop is handling the channels.
-    // Alternatively, you can process the samples with the channels
-    // interleaved by keeping the same state.
-    for (int channel = 0; channel < totalNumInputChannels; ++channel)
+    /*ON*/
+    if (PWR_state)
     {
-        auto* channelData = buffer.getWritePointer (channel);
 
-        // ..do something to the data...
+        /*AudioBlock*/
+        juce::dsp::AudioBlock<float> audioBlock{ buffer };
+
+        /*Process*/
+        //osc->process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
+        //gain.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
+
+        /**/
+        processorChain.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
+        
+        /*Scope*/
+        oscilloscope.pushBuffer(buffer);
+
+
+    }
+    else 
+    {
+        /*Scope*/
+        oscilloscope.clear();
     }
 }
 
@@ -185,8 +219,70 @@ void MyNoiseToasterAudioProcessor::setStateInformation (const void* data, int si
 }
 
 //==============================================================================
+void MyNoiseToasterAudioProcessor::VCO_changeWave()
+{
+    switch(VCO_waveType)
+    {
+        case WaveType::Sawtooh:
+        {
+            /**/
+            auto& osc = processorChain.template get<VCO_oscIndex>();
+            osc.initialise([](float x) { return (x / juce::MathConstants<float>::pi); }, BUFFER_SIZE);
+            osc.setFrequency(VCO_frequency); 
+            break;
+        }
+        case WaveType::Square:
+        {
+            /**/
+            auto& osc = processorChain.template get<VCO_oscIndex>();
+            osc.initialise([](float x) { return ((x < 0.0f) ? (-1.0f) : (1.0f)); }, BUFFER_SIZE);
+            osc.setFrequency(VCO_frequency);
+            break;
+        }
+        case WaveType::Off:
+        default:
+        {
+            /**/
+            auto& osc = processorChain.template get<VCO_oscIndex>();
+            osc.initialise([](float x) { return 0.0f; }, BUFFER_SIZE);
+            osc.setFrequency(VCO_frequency);
+            break;
+        }
+    }
+}
+void MyNoiseToasterAudioProcessor::LFO_changeWave()
+{
+}
+void MyNoiseToasterAudioProcessor::Output_setGain() 
+{
+    /**/
+    auto& gain = processorChain.template get<Output_gainIndex>();
+    gain.setGainLinear(Output_gain);
+}
+void MyNoiseToasterAudioProcessor::VCO_setFrequency() 
+{
+    /**/
+    auto& osc = processorChain.template get<VCO_oscIndex>();
+    osc.setFrequency(VCO_frequency);
+}
+void MyNoiseToasterAudioProcessor::LFO_setFrequency()
+{
+}
+void MyNoiseToasterAudioProcessor::VCLPF_setFrequency()
+{
+    auto& filter = processorChain.get<VCLPF_filterIndex>();
+    filter.setCutoffFrequencyHz(VCLPF_cutoffFrequency);
+}
+void MyNoiseToasterAudioProcessor::VCLPF_setResonance()
+{
+    auto& filter = processorChain.get<VCLPF_filterIndex>();
+    filter.setResonance(VCLPF_resonance);
+}
+//==============================================================================
 // This creates new instances of the plugin..
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new MyNoiseToasterAudioProcessor();
 }
+
+
