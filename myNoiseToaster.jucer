@@ -1,17 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT id="pVNlZZ" name="myNoiseToaster" projectType="guiapp" useAppConfig="0"
+<JUCERPROJECT id="YUm6g7" name="myNoiseToaster" projectType="audioplug" useAppConfig="0"
               addUsingNamespaceToJuceHeader="0" displaySplashScreen="1" jucerFormatVersion="1">
-  <MAINGROUP id="va6iNz" name="myNoiseToaster">
-    <GROUP id="{5B601524-F403-C15A-7207-C1B5C3DA50A6}" name="Source">
-      <FILE id="JN5YJW" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
-      <FILE id="qv0ALr" name="MainComponent.h" compile="0" resource="0" file="Source/MainComponent.h"/>
-      <FILE id="BcAe0v" name="MainComponent.cpp" compile="1" resource="0"
-            file="Source/MainComponent.cpp"/>
+  <MAINGROUP id="NP2jcH" name="myNoiseToaster">
+    <GROUP id="{6D831EAF-4558-0636-41DA-281834AC8F0C}" name="Source">
+      <FILE id="I3izZQ" name="PluginProcessor.cpp" compile="1" resource="0"
+            file="Source/PluginProcessor.cpp"/>
+      <FILE id="nQ6VFV" name="PluginProcessor.h" compile="0" resource="0"
+            file="Source/PluginProcessor.h"/>
+      <FILE id="QJQ4wV" name="PluginEditor.cpp" compile="1" resource="0"
+            file="Source/PluginEditor.cpp"/>
+      <FILE id="bfWAVX" name="PluginEditor.h" compile="0" resource="0" file="Source/PluginEditor.h"/>
     </GROUP>
-    <FILE id="rCxD7t" name="Background.PNG" compile="0" resource="1" file="Background.PNG"/>
+    <FILE id="Kgntys" name="Background.PNG" compile="0" resource="1" file="Background.PNG"/>
   </MAINGROUP>
-  <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1"/>
+  <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1" JUCE_VST3_CAN_REPLACE_VST2="0"/>
   <EXPORTFORMATS>
     <LINUX_MAKE targetFolder="Builds/LinuxMakefile">
       <CONFIGURATIONS>
@@ -19,18 +22,19 @@
         <CONFIGURATION isDebug="0" name="Release" targetName="myNoiseToaster"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
-        <MODULEPATH id="juce_audio_basics" path="../../../../Programmen/JUCE/modules"/>
-        <MODULEPATH id="juce_audio_devices" path="../../../../Programmen/JUCE/modules"/>
-        <MODULEPATH id="juce_audio_formats" path="../../../../Programmen/JUCE/modules"/>
-        <MODULEPATH id="juce_audio_processors" path="../../../../Programmen/JUCE/modules"/>
-        <MODULEPATH id="juce_audio_utils" path="../../../../Programmen/JUCE/modules"/>
-        <MODULEPATH id="juce_core" path="../../../../Programmen/JUCE/modules"/>
-        <MODULEPATH id="juce_data_structures" path="../../../../Programmen/JUCE/modules"/>
-        <MODULEPATH id="juce_events" path="../../../../Programmen/JUCE/modules"/>
-        <MODULEPATH id="juce_graphics" path="../../../../Programmen/JUCE/modules"/>
-        <MODULEPATH id="juce_gui_basics" path="../../../../Programmen/JUCE/modules"/>
-        <MODULEPATH id="juce_gui_extra" path="../../../../Programmen/JUCE/modules"/>
-        <MODULEPATH id="juce_dsp" path="../../../../Programmen/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_basics" path="../../../../../Programmen/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_devices" path="../../../../../Programmen/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_formats" path="../../../../../Programmen/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_plugin_client" path="../../../../../Programmen/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_processors" path="../../../../../Programmen/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_utils" path="../../../../../Programmen/JUCE/modules"/>
+        <MODULEPATH id="juce_core" path="../../../../../Programmen/JUCE/modules"/>
+        <MODULEPATH id="juce_data_structures" path="../../../../../Programmen/JUCE/modules"/>
+        <MODULEPATH id="juce_events" path="../../../../../Programmen/JUCE/modules"/>
+        <MODULEPATH id="juce_graphics" path="../../../../../Programmen/JUCE/modules"/>
+        <MODULEPATH id="juce_gui_basics" path="../../../../../Programmen/JUCE/modules"/>
+        <MODULEPATH id="juce_gui_extra" path="../../../../../Programmen/JUCE/modules"/>
+        <MODULEPATH id="juce_dsp" path="../../../../../Programmen/JUCE/modules"/>
       </MODULEPATHS>
     </LINUX_MAKE>
     <VS2019 targetFolder="Builds/VisualStudio2019">
@@ -39,18 +43,19 @@
         <CONFIGURATION isDebug="0" name="Release" targetName="myNoiseToaster"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
-        <MODULEPATH id="juce_audio_basics" path="../../../../Programmen/JUCE/modules"/>
-        <MODULEPATH id="juce_audio_devices" path="../../../../Programmen/JUCE/modules"/>
-        <MODULEPATH id="juce_audio_formats" path="../../../../Programmen/JUCE/modules"/>
-        <MODULEPATH id="juce_audio_processors" path="../../../../Programmen/JUCE/modules"/>
-        <MODULEPATH id="juce_audio_utils" path="../../../../Programmen/JUCE/modules"/>
-        <MODULEPATH id="juce_core" path="../../../../Programmen/JUCE/modules"/>
-        <MODULEPATH id="juce_data_structures" path="../../../../Programmen/JUCE/modules"/>
-        <MODULEPATH id="juce_events" path="../../../../Programmen/JUCE/modules"/>
-        <MODULEPATH id="juce_graphics" path="../../../../Programmen/JUCE/modules"/>
-        <MODULEPATH id="juce_gui_basics" path="../../../../Programmen/JUCE/modules"/>
-        <MODULEPATH id="juce_gui_extra" path="../../../../Programmen/JUCE/modules"/>
-        <MODULEPATH id="juce_dsp" path="../../../../Programmen/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_basics" path="../../../../../Programmen/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_devices" path="../../../../../Programmen/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_formats" path="../../../../../Programmen/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_plugin_client" path="../../../../../Programmen/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_processors" path="../../../../../Programmen/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_utils" path="../../../../../Programmen/JUCE/modules"/>
+        <MODULEPATH id="juce_core" path="../../../../../Programmen/JUCE/modules"/>
+        <MODULEPATH id="juce_data_structures" path="../../../../../Programmen/JUCE/modules"/>
+        <MODULEPATH id="juce_events" path="../../../../../Programmen/JUCE/modules"/>
+        <MODULEPATH id="juce_graphics" path="../../../../../Programmen/JUCE/modules"/>
+        <MODULEPATH id="juce_gui_basics" path="../../../../../Programmen/JUCE/modules"/>
+        <MODULEPATH id="juce_gui_extra" path="../../../../../Programmen/JUCE/modules"/>
+        <MODULEPATH id="juce_dsp" path="../../../../../Programmen/JUCE/modules"/>
       </MODULEPATHS>
     </VS2019>
   </EXPORTFORMATS>
@@ -58,6 +63,8 @@
     <MODULE id="juce_audio_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_audio_devices" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_audio_formats" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_plugin_client" showAllCode="1" useLocalCopy="0"
+            useGlobalPath="1"/>
     <MODULE id="juce_audio_processors" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_audio_utils" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_core" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
