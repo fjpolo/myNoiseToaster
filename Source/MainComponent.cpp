@@ -277,7 +277,7 @@ void MainComponent::prepareToPlay (int samplesPerBlockExpected, double sampleRat
     
     samplerate = sampleRate;
     /**/
-    auto* oscillator1 = new WavetableOscillator(sawtoothTable);
+    auto* oscillator1 = new WavetableOscillator(VCO_waveTable);
     auto* oscillator2 = new WavetableOscillator(LFO_waveTable);
     auto* oscillator3 = new WavetableOscillator(AREG_waveTable);
     oscillator1->setFrequency((float)220, (float)sampleRate);
@@ -716,8 +716,8 @@ void MainComponent::sliderValueChanged(juce::Slider* slider)
 }
 void MainComponent::VCO_createWavetable()
 {
-    sawtoothTable.setSize(1, (int)VCO_tableSize);
-    auto* samples = sawtoothTable.getWritePointer(0);
+    VCO_waveTable.setSize(1, (int)VCO_tableSize);
+    auto* samples = VCO_waveTable.getWritePointer(0);
 
     auto angleDelta = juce::MathConstants<double>::twoPi / (double)(VCO_tableSize - 1);
     auto currentAngle = 0.0;
@@ -739,11 +739,24 @@ void MainComponent::VCO_createWavetable()
         }
         case 2:
         {
-            /*Square*/
-            for (unsigned int i = 0; i < VCO_tableSize; ++i)
+ //           /*Square*/
+ //           for (unsigned int i = 0; i < VCO_tableSize; ++i)
+ //           {
+ ///*               if (currentAngle <= juce::MathConstants<float>::pi) 
+ //                   samples[i] = 1.0f;
+ //               else 
+ //                   samples[i] = -1.0f;*/
+ //               samples[i] = sin(currentAngle);
+ //               currentAngle += angleDelta;
+ //           }
+            for (unsigned int i = 0; i < (VCO_tableSize / 2) - 1; ++i) 
             {
-                if (currentAngle <= juce::MathConstants<float>::pi) samples[i] = 1.0f;
-                else samples[i] = -1.0f;
+                samples[i] = 1.0f;
+                currentAngle += angleDelta;
+            }
+            for (unsigned int i = (VCO_tableSize / 2); i < VCO_tableSize; ++i)
+            {
+                samples[i] = 0;
                 currentAngle += angleDelta;
             }
             break;

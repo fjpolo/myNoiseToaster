@@ -179,7 +179,7 @@ private:
     juce::Label cpuUsageText;
     const unsigned int VCO_tableSize = 1 << 7;      // [2]
     float level = 0.0f;
-    juce::AudioSampleBuffer sawtoothTable;          // [1]
+    juce::AudioSampleBuffer VCO_waveTable;          // [1]
     juce::OwnedArray<WavetableOscillator> oscillators;
     double VCO_frequency;
     WavetableOscillator* VCO_osc;
