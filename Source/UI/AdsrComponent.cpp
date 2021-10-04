@@ -49,7 +49,7 @@ AdsrComponent::~AdsrComponent()
 void AdsrComponent::paint (juce::Graphics& g)
 {
     /**/
-    //g.fillAll(juce::Colours::black);
+    // g.fillAll(juce::Colours::black);
 }
 
 void AdsrComponent::resized()
@@ -66,23 +66,15 @@ void AdsrComponent::resized()
     release_dial.setBounds(AREG_dialX_release - AREG_dialRadius, AREG_dialY - AREG_dialRadius, AREG_dialDiameter, AREG_dialDiameter);
     repeat_toggleButton.setBounds(206 - AREG_toggleButtonRadius, 680 - AREG_toggleButtonRadius, AREG_toggleButtonDiameter, AREG_toggleButtonDiameter);
     manualGate_toggleButton.setBounds(112 - AREG_toggleButtonRadius, 680 - AREG_toggleButtonRadius, AREG_toggleButtonDiameter, AREG_toggleButtonDiameter);
-
-    /*Sliders*/
-    const auto bounds = getLocalBounds().reduced(10);
-    const auto padding = 10;
-    const auto sliderWidth = bounds.getWidth() / 4 - padding;
-    const auto sliderHeight = bounds.getHeight();
-    const auto sliderStartX = 0;
-    const auto sliderStartY = 0;
  }
 
 void AdsrComponent::setSliderParams(juce::Slider& slider)
 {
-    /*slider*/
-    slider.setSliderStyle(juce::Slider::SliderStyle::LinearVertical);
-    slider.setTextBoxStyle(juce::Slider::TextBoxBelow, true, 50, 25);
-    slider.setRange(0, 1);
-    addAndMakeVisible(slider);
+    ///*slider*/
+    //slider.setSliderStyle(juce::Slider::SliderStyle::LinearVertical);
+    //slider.setTextBoxStyle(juce::Slider::TextBoxBelow, true, 50, 25);
+    //slider.setRange(0, 1);
+    //addAndMakeVisible(slider);
 }
 
 void AdsrComponent::buttonClicked(juce::Button* button)

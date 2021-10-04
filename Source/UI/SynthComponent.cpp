@@ -17,12 +17,14 @@
 SynthComponent::SynthComponent(juce::AudioProcessorValueTreeState& apvts) : 
     vcoComp(apvts, "osc1wavetype"), adsr(apvts) , apvts(apvts)
 {
-    /*VCO*/
-    addAndMakeVisible(vcoComp);
-
     /*AREG (ADSR)*/
     addAndMakeVisible(adsr);
 
+    
+    /*VCO*/
+    addAndMakeVisible(vcoComp);
+
+    
 
     ///*** Outuput ***/
     //addAndMakeVisible(Output_volume_dial);
@@ -360,11 +362,13 @@ void SynthComponent::resized()
     //const int scopeY{ 121 };
     //audioProcessor.oscilloscope.setBounds(scopeX - scopeWidth / 2, scopeY - scopeHeight / 2 + 20, scopeWidth, scopeHeight);
 
-    /*VCO*/
-    vcoComp.setBounds(getLocalBounds());
+    
 
     /*AREG (ADSR)*/
     adsr.setBounds(getLocalBounds());
+
+    /*VCO*/
+    vcoComp.setBounds(getLocalBounds());
 }
 
 //==============================================================================

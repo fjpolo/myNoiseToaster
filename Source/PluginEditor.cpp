@@ -24,7 +24,7 @@ MyNoiseToasterAudioProcessorEditor::MyNoiseToasterAudioProcessorEditor (MyNoiseT
     PWR_toggleButton.setButtonText("OFF");
     PWR_toggleButton.addListener(this);
 
-    /*Scope*/
+    ///*Scope*/
     addAndMakeVisible(audioProcessor.oscilloscope);
 
     /*Window*/
