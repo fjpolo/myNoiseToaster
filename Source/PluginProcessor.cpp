@@ -21,15 +21,10 @@ MyNoiseToasterAudioProcessor::MyNoiseToasterAudioProcessor()
                      #endif
                        )
 #endif
+    , apvts(*this, nullptr, "Parameters", createParams()),
+    noiseToasterData(apvts)
 {
-    /*get a reference to the Oscillator by supplying the index of the process and use the processorChain.get<>() method*/
-    auto& osc = processorChain.template get<VCO_oscIndex>();
-    /*initialise the oscillator using a lambda function and the std::sin function to provide the sine wave to the oscillator*/
-    osc.initialise( [](float x) { return (x / juce::MathConstants<float>::pi); }, BUFFER_SIZE);
     
-    /*LFO*/
-    lfo.initialise([](float x) { return std::sin(x); }, 128);
-    lfo.setFrequency(LFO_frequency);
 }
 
 MyNoiseToasterAudioProcessor::~MyNoiseToasterAudioProcessor()
@@ -101,23 +96,7 @@ void MyNoiseToasterAudioProcessor::changeProgramName (int index, const juce::Str
 //==============================================================================
 void MyNoiseToasterAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
-    /*Specifications*/
-    spec.maximumBlockSize = samplesPerBlock;
-    spec.sampleRate = sampleRate;
-    spec.numChannels = getTotalNumInputChannels();
-
-    /*Chain*/
-    processorChain.prepare(spec);
-    /*To set the frequency of the oscillator, we need to once again get a reference to it*/
-    auto& osc = processorChain.template get<VCO_oscIndex>();
-    osc.setFrequency(VCO_frequency);
-    /**/
-    auto& gain = processorChain.template get<Output_gainIndex>();
-    gain.setGainLinear(0.25f);
-    /**/
-    auto& filter = processorChain.get<VCLPF_filterIndex>();
-    filter.setCutoffFrequencyHz(VCLPF_cutoffFrequency);
-    filter.setResonance(VCLPF_resonance);
+    noiseToasterData.prepareToPlay(sampleRate, samplesPerBlock, getTotalNumOutputChannels());
 }
 
 void MyNoiseToasterAudioProcessor::releaseResources()
@@ -152,43 +131,25 @@ bool MyNoiseToasterAudioProcessor::isBusesLayoutSupported (const BusesLayout& la
 }
 #endif
 
-void MyNoiseToasterAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
+void MyNoiseToasterAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     juce::ScopedNoDenormals noDenormals;
-    auto totalNumInputChannels  = getTotalNumInputChannels();
+    auto totalNumInputChannels = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
-
-    // In case we have more outputs than inputs, this code clears any output
-    // channels that didn't contain input data, (because these aren't
-    // guaranteed to be empty - they may contain garbage).
-    // This is here to avoid people getting screaming feedback
-    // when they first compile a plugin, but obviously you don't need to keep
-    // this code if your algorithm always overwrites all the output channels.
+    /*From JUCE*/
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
-        buffer.clear (i, 0, buffer.getNumSamples());
+        buffer.clear(i, 0, buffer.getNumSamples());
 
-    /*ON*/
-    if (PWR_state)
+    if(PWR_state)
     {
+        /*noiseToasterData*/
+        noiseToasterData.processBlock(buffer, midiMessages);
 
-        /*AudioBlock*/
-        juce::dsp::AudioBlock<float> audioBlock{ buffer };
-
-        /*Process*/
-        //osc->process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
-        //gain.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
-
-        /**/
-        processorChain.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
-        
         /*Scope*/
         oscilloscope.pushBuffer(buffer);
-
-
     }
-    else 
+    else
     {
-        /*Scope*/
         oscilloscope.clear();
     }
 }
@@ -252,6 +213,7 @@ void MyNoiseToasterAudioProcessor::VCO_changeWave()
 }
 void MyNoiseToasterAudioProcessor::LFO_changeWave()
 {
+
 }
 void MyNoiseToasterAudioProcessor::Output_setGain() 
 {
@@ -267,6 +229,7 @@ void MyNoiseToasterAudioProcessor::VCO_setFrequency()
 }
 void MyNoiseToasterAudioProcessor::LFO_setFrequency()
 {
+    lfo.setFrequency(LFO_frequency);
 }
 void MyNoiseToasterAudioProcessor::VCLPF_setFrequency()
 {
@@ -285,4 +248,21 @@ juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
     return new MyNoiseToasterAudioProcessor();
 }
 
+/*Value tree*/
+juce::AudioProcessorValueTreeState::ParameterLayout MyNoiseToasterAudioProcessor::createParams()
+{
+    /*Parameter vector*/
+    std::vector< std::unique_ptr< juce::RangedAudioParameter > > params;
 
+    /*OSC select*/
+    params.push_back(std::make_unique<juce::AudioParameterChoice>("osc1wavetype", "Osc1 wave type", juce::StringArray{ "Sine", "Saw", "Square" }, 0));
+
+    /*ADSR*/
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("attack", "Attack", juce::NormalisableRange<float> { 0.1f, 1.0f, 0.1f }, 0.1f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("decay", "Decay", juce::NormalisableRange<float> { 0.1f, 1.0f, 0.1f }, 0.1f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("sustain", "Sustain", juce::NormalisableRange<float> { 0.1f, 1.0f, 0.1f }, 1.0f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("release", "Release", juce::NormalisableRange<float> { 0.1f, 3.0f, 0.1f }, 0.4f));
+
+    /*Return*/
+    return { params.begin(), params.end() };
+}

@@ -1,9 +1,34 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <JUCERPROJECT id="YUm6g7" name="myNoiseToaster" projectType="audioplug" useAppConfig="0"
-              addUsingNamespaceToJuceHeader="0" displaySplashScreen="1" jucerFormatVersion="1">
+              addUsingNamespaceToJuceHeader="0" displaySplashScreen="1" jucerFormatVersion="1"
+              pluginCharacteristicsValue="pluginIsSynth,pluginWantsMidiIn">
   <MAINGROUP id="NP2jcH" name="myNoiseToaster">
     <GROUP id="{6D831EAF-4558-0636-41DA-281834AC8F0C}" name="Source">
+      <GROUP id="{07C51DE6-7B0C-EF3C-83C1-37B84DDB065F}" name="Data">
+        <FILE id="bEvR5H" name="AdsrData.cpp" compile="1" resource="0" file="Source/Data/AdsrData.cpp"/>
+        <FILE id="sVhD50" name="AdsrData.h" compile="0" resource="0" file="Source/Data/AdsrData.h"/>
+        <FILE id="wWPe9b" name="SynthData.cpp" compile="1" resource="0" file="Source/Data/SynthData.cpp"/>
+        <FILE id="rpMOzl" name="SynthData.h" compile="0" resource="0" file="Source/Data/SynthData.h"/>
+        <FILE id="TxdvPT" name="SynthSound.h" compile="0" resource="0" file="Source/Data/SynthSound.h"/>
+        <FILE id="gTCfLm" name="SynthVoice.cpp" compile="1" resource="0" file="Source/Data/SynthVoice.cpp"/>
+        <FILE id="y56W2B" name="SynthVoice.h" compile="0" resource="0" file="Source/Data/SynthVoice.h"/>
+        <FILE id="ORQTdK" name="VcoOscData.cpp" compile="1" resource="0" file="Source/Data/VcoOscData.cpp"/>
+        <FILE id="eCPN4X" name="VcoOscData.h" compile="0" resource="0" file="Source/Data/VcoOscData.h"/>
+      </GROUP>
+      <GROUP id="{ADB6F70E-CA13-3AA6-F9CE-95E5FDB69F16}" name="UI">
+        <FILE id="vtUxWW" name="AdsrComponent.cpp" compile="1" resource="0"
+              file="Source/UI/AdsrComponent.cpp"/>
+        <FILE id="pnoYoM" name="AdsrComponent.h" compile="0" resource="0" file="Source/UI/AdsrComponent.h"/>
+        <FILE id="sLQqsD" name="SynthComponent.cpp" compile="1" resource="0"
+              file="Source/UI/SynthComponent.cpp"/>
+        <FILE id="L8TEsQ" name="SynthComponent.h" compile="0" resource="0"
+              file="Source/UI/SynthComponent.h"/>
+        <FILE id="wlaRI9" name="VcoOscComponent.cpp" compile="1" resource="0"
+              file="Source/UI/VcoOscComponent.cpp"/>
+        <FILE id="TRg0en" name="VcoOscComponent.h" compile="0" resource="0"
+              file="Source/UI/VcoOscComponent.h"/>
+      </GROUP>
       <FILE id="I3izZQ" name="PluginProcessor.cpp" compile="1" resource="0"
             file="Source/PluginProcessor.cpp"/>
       <FILE id="nQ6VFV" name="PluginProcessor.h" compile="0" resource="0"

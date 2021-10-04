@@ -9,6 +9,7 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "Data/SynthData.h"
 
 /**/
 const auto BUFFER_SIZE = 1 << 7;
@@ -120,8 +121,8 @@ public:
 
     /*LFO*/
     juce::dsp::AudioBlock<float> tempBlock; 
-    static constexpr size_t LFO_UpdateRate = 100;
-    size_t lfoUpdateCounter = LFO_UpdateRate;
+    static constexpr size_t lfoUpdateRate = 100;
+    size_t lfoUpdateCounter = lfoUpdateRate;
     juce::dsp::Oscillator<float> lfo;
 
     /*Oscilloscope*/
@@ -135,11 +136,16 @@ public:
     void VCLPF_setFrequency();
     void VCLPF_setResonance();
 
+    /*Param tree*/
+    juce::AudioProcessorValueTreeState apvts;
+
 private:
     //==============================================================================
 
-    
-    
+    /*SynthData*/
+    SynthData noiseToasterData;
+    /**/
+    juce::AudioProcessorValueTreeState::ParameterLayout createParams();
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MyNoiseToasterAudioProcessor)
