@@ -17,12 +17,14 @@
 SynthComponent::SynthComponent(juce::AudioProcessorValueTreeState& apvts) : 
     vcoComp(apvts, "osc1wavetype"), adsr(apvts) , apvts(apvts)
 {
+    /*VCO*/
+    addAndMakeVisible(vcoComp);
+    
     /*AREG (ADSR)*/
     addAndMakeVisible(adsr);
 
     
-    /*VCO*/
-    addAndMakeVisible(vcoComp);
+    
 
     
 
@@ -364,11 +366,24 @@ void SynthComponent::resized()
 
     
 
-    /*AREG (ADSR)*/
-    adsr.setBounds(getLocalBounds());
-
     /*VCO*/
-    vcoComp.setBounds(getLocalBounds());
+    // vcoComp.setBounds(getLocalBounds());
+    //auto vcoBounds{ getLocalBounds() };
+    //vcoBounds.setWidth(585);
+    //vcoBounds.setHeight(230);
+    //vcoComp.setBounds(vcoBounds);
+    vcoComp.setBounds(58, 52, 530, 436);
+
+    /*AREG (ADSR)*/
+    //auto adsrBounds{ getLocalBounds() };
+    //adsrBounds.setCentre();
+    //adsrBounds.setWidth(128);
+    //adsrBounds.setHeight(128);
+    //adsr.setBounds(adsrBounds);
+    //adsr.setBounds(getLocalBounds());
+    adsr.setBounds(60, 434, 342-60, 748-434);
+
+    
 }
 
 //==============================================================================

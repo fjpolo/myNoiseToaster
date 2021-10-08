@@ -69,30 +69,31 @@ VcoOscComponent::~VcoOscComponent()
 void VcoOscComponent::paint (juce::Graphics& g)
 {
     /**/
-    //g.fillAll (juce::Colours::black);   
+    // g.fillAll (juce::Colours::red);   
 }
 
 void VcoOscComponent::resized()
 {
     //
     // oscWaveSelector.setBounds(0, 0, 90, 20);
-
+    const int VCO_originX{ 58 };
+    const int VCO_originY{ 52 };
     const int VCO_dialRadius{ 40 };
     const int VCO_dialDiameter{ VCO_dialRadius * 2 };
     const int VCO_toggleButtonRadius{ 20 };
     const int VCO_toggleButtonDiameter{ VCO_toggleButtonRadius * 2 };
-    const int VCO_dialY{ 165 };
-    const int VCO_dialX_frequency{ 128 };
-    const int VCO_dialX_LFO_ModDepth{ 320 };
-    const int VCO_dialX_AR_ModDepth{ 448 };
-    const int VCO_syncToggleButtonX{ 224 };
-    const int VCO_ARmodToggleButtonX{ 548 };
+    const int VCO_dialY{ 165 - VCO_originX };
+    const int VCO_dialX_frequency{ 128 - VCO_originX };
+    const int VCO_dialX_LFO_ModDepth{ 320 - VCO_originX };
+    const int VCO_dialX_AR_ModDepth{ 448 - VCO_originX };
+    const int VCO_syncToggleButtonX{ 224 - VCO_originX };
+    const int VCO_ARmodToggleButtonX{ 548 - VCO_originX };
     frequency_dial.setBounds(VCO_dialX_frequency - VCO_dialRadius, VCO_dialY - VCO_dialRadius, VCO_dialDiameter, VCO_dialDiameter);
     LFO_ModDepth_dial.setBounds(VCO_dialX_LFO_ModDepth - VCO_dialRadius, VCO_dialY - VCO_dialRadius, VCO_dialDiameter, VCO_dialDiameter);
     AR_ModDepth_dial.setBounds(VCO_dialX_AR_ModDepth - VCO_dialRadius, VCO_dialY - VCO_dialRadius, VCO_dialDiameter, VCO_dialDiameter);
     sync_toggleButton.setBounds(VCO_syncToggleButtonX - VCO_toggleButtonRadius, VCO_dialY - VCO_toggleButtonRadius, VCO_toggleButtonDiameter, VCO_toggleButtonDiameter);
     ARmod_toggleButton.setBounds(VCO_ARmodToggleButtonX - VCO_toggleButtonRadius, VCO_dialY - VCO_toggleButtonRadius, VCO_toggleButtonDiameter, VCO_toggleButtonDiameter);
-    inputSelect_dial.setBounds(108 - VCO_dialRadius, 314 - VCO_dialRadius, VCO_dialDiameter, VCO_dialDiameter);
+    inputSelect_dial.setBounds(108 - VCO_originX - VCO_dialRadius, 314 - VCO_originY - VCO_dialRadius, VCO_dialDiameter, VCO_dialDiameter);
 
 }
 
